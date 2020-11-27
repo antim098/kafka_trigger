@@ -15,11 +15,11 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
+import sun.security.provider.ConfigFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 public class Trigger implements ITrigger {
 
     private String topic;
-    private Properties properties;
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
 
@@ -39,12 +38,8 @@ public class Trigger implements ITrigger {
 
         Thread.currentThread().setContextClassLoader(null);
 
-        //topic = "test";
-        properties = getProps();
-        topic = properties.getProperty("topic.name");
-        properties.remove("topic.name");
-        //producer = new KafkaProducer<String, String>(getProps());
-        producer = new KafkaProducer<String, String>(properties);
+        topic = "trigger";
+        producer = new KafkaProducer<String, String>(getProps());
         threadPoolExecutor = new ThreadPoolExecutor(4, 20, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     }
@@ -144,18 +139,8 @@ public class Trigger implements ITrigger {
      * @return
      */
     private Properties getProps() {
-        File configFile = new java.io.File("/etc/cassandra/triggers/KafkaTrigger.properties");
-        FileReader reader = null;
         Properties properties = new Properties();
-        try {
-            reader = new FileReader(configFile);
-            properties.load(reader);
-            reader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("Config file not found");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        properties.put("bootstrap.servers", "10.105.22.175:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         return properties;
