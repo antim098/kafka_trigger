@@ -144,7 +144,7 @@ public class Trigger implements ITrigger {
      * @return
      */
     private Properties getProps() {
-        File configFile = new java.io.File("/etc/cassandra/triggers/KafkaTrigger.yml");
+        File configFile = new java.io.File("/etc/cassandra/triggers/KafkaTrigger.properties");
         FileReader reader = null;
         Properties properties = new Properties();
         try {
