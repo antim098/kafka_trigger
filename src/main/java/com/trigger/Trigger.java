@@ -10,12 +10,18 @@ import org.apache.cassandra.db.rows.Cell;
 import org.apache.cassandra.db.rows.Row;
 import org.apache.cassandra.db.rows.Unfiltered;
 import org.apache.cassandra.db.rows.UnfilteredRowIterator;
+import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.triggers.ITrigger;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.json.simple.JSONObject;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -23,9 +29,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
 
-    private String topic;
-    private Producer<String, String> producer;
-    private ThreadPoolExecutor threadPoolExecutor;
+    private static final String FILE_PATH = "/etc/cassandra/triggers/KafkaTrigger.yml";
+    private static final String TOPIC_NAME = "topic.name";
+
+    private final String topic;
+    private final Producer<String, String> producer;
+    private final ThreadPoolExecutor threadPoolExecutor;
 
     /**
      *
@@ -33,9 +42,13 @@ public class Trigger implements ITrigger {
     public Trigger() {
 
         Thread.currentThread().setContextClassLoader(null);
-
-        topic = "test";
-        producer = new KafkaProducer<String, String>(getProps());
+        Map<String, Object> configuration = loadConfiguration();
+        topic = (String) getProperty(TOPIC_NAME, configuration);
+        StringSerializer keySerializer = getSerializer(configuration, true);
+        StringSerializer valueSerializer = getSerializer(configuration, false);
+        producer = new KafkaProducer<>(configuration, keySerializer, valueSerializer);
+        //topic = "test";
+        //producer = new KafkaProducer<String, String>(getProps());
         threadPoolExecutor = new ThreadPoolExecutor(4, 20, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     }
@@ -80,12 +93,9 @@ public class Trigger implements ITrigger {
                             JSONObject jsonCell = new JSONObject();
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
-                            jsonCell.put("name", columnDef.name.toString());
+                            jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
                             if (cell.isTombstone()) {
                                 jsonCell.put("deleted", true);
-                            } else {
-                                String data = columnDef.type.getString(cell.value());
-                                jsonCell.put("value", data);
                             }
                             cellObjects.add(jsonCell);
                         }
@@ -134,15 +144,42 @@ public class Trigger implements ITrigger {
         return row.deletion().time().markedForDeleteAt() > Long.MIN_VALUE;
     }
 
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> loadConfiguration() {
+        InputStream stream = null;
+        try {
+            stream = new FileInputStream(new File(FILE_PATH));
+            Yaml yaml = new Yaml();
+            return (Map<String, Object>) yaml.load(stream);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            FileUtils.closeQuietly(stream);
+        }
+    }
+
+    private Object getProperty(String key, Map<String, Object> configuration) {
+        if (!configuration.containsKey(key)) {
+            throw new RuntimeException("Property: " + key + " not found in configuration.");
+        }
+        return configuration.get(key);
+    }
+
+    private StringSerializer getSerializer(Map<String, Object> configuration, boolean isKey) {
+        StringSerializer serializer = new StringSerializer();
+        serializer.configure(configuration, isKey);
+        return serializer;
+    }
+
     /**
      * @return
      */
     private Properties getProps() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "172.26.32.31:9092");
+        properties.put("bootstrap.servers", "localhost:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.setProperty("auto.offset.reset", "latest");
         return properties;
     }
 
