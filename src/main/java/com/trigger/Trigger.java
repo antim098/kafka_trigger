@@ -11,16 +11,15 @@ import org.apache.cassandra.db.rows.Row;
 import org.apache.cassandra.db.rows.Unfiltered;
 import org.apache.cassandra.db.rows.UnfilteredRowIterator;
 import org.apache.cassandra.triggers.ITrigger;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
-import sun.security.provider.ConfigFile;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,18 +29,19 @@ public class Trigger implements ITrigger {
     private String topic;
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
+    private AdminClient client;
 
     /**
      *
      */
     public Trigger() {
-
         Thread.currentThread().setContextClassLoader(null);
-
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
-        threadPoolExecutor = new ThreadPoolExecutor(4, 20, 30,
+        AdminClient client = AdminClient.create(getProps());
+        threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
+
     }
 
     /**
@@ -120,7 +120,12 @@ public class Trigger implements ITrigger {
         }
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        producer.send(record);
+        try {
+            client.listTopics(new ListTopicsOptions().timeoutMs(3000)).listings().get();
+            producer.send(record);
+        } catch (ExecutionException | InterruptedException ex) {
+            System.out.println("Kafka is not available, timed out after 3000 ms");
+        }
     }
 
     private String getKey(Partition partition) {
@@ -140,7 +145,7 @@ public class Trigger implements ITrigger {
      */
     private Properties getProps() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "10.105.22.175:9092");
+        properties.put("bootstrap.servers", "172.26.32.31:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         return properties;
