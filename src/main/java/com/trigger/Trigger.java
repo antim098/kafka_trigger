@@ -38,7 +38,7 @@ public class Trigger implements ITrigger {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
-        AdminClient client = AdminClient.create(getProps());
+        client = AdminClient.create(getProps());
         threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
 
@@ -49,7 +49,12 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.execute(() -> handleUpdate(partition));
+        threadPoolExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Trigger.this.handleUpdate(partition);
+            }
+        });
         return Collections.emptyList();
     }
 
