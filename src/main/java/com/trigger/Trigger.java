@@ -128,8 +128,9 @@ public class Trigger implements ITrigger {
         try {
             client.listTopics(new ListTopicsOptions().timeoutMs(3000)).listings().get();
             producer.send(record);
-        } catch (ExecutionException | InterruptedException ex) {
+        } catch (Exception ex) {
             System.out.println("Kafka is not available, timed out after 3000 ms");
+            Thread.currentThread().interrupt();
         }
     }
 
