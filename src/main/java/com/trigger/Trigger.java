@@ -17,15 +17,17 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
 
+    private static Logger logger = null;
     private String topic;
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
@@ -38,6 +40,7 @@ public class Trigger implements ITrigger {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
+        logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(getProps());
         threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
@@ -129,7 +132,7 @@ public class Trigger implements ITrigger {
             client.listTopics(new ListTopicsOptions().timeoutMs(3000)).listings().get();
             producer.send(record);
         } catch (Exception ex) {
-            System.out.println("Kafka is not available, timed out after 3000 ms");
+            logger.info("Kafka Connection Status", "Kafka is not available, timed out after 3000 ms");
             Thread.currentThread().interrupt();
         }
     }
