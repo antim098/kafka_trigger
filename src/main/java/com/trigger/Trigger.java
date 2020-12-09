@@ -22,7 +22,7 @@ public class Trigger implements ITrigger {
     public static boolean isKafkaAlive;
     private static Logger logger = null;
     private String topic;
-    private Producer<String, String> producer;
+    //private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private AdminClient client;
     private Timer timer = new Timer();
@@ -33,23 +33,23 @@ public class Trigger implements ITrigger {
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
-        producer = new KafkaProducer<String, String>(getProps());
+        //producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(getProps());
-        timer.schedule(new KafkaConnectionListener(client), 0, 10000);
+        timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     }
 
-    public static boolean getKafkaStatus() {
+    static boolean getKafkaStatus() {
         return isKafkaAlive;
     }
 
-    public static void setKafkaStatus(boolean value) {
+    static void setKafkaStatus(boolean value) {
         isKafkaAlive = value;
     }
 
-    public static Logger getLogger() {
+    static Logger getLogger() {
         return logger;
     }
 
@@ -58,7 +58,7 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
+        threadPoolExecutor.submit(new TriggerThread(partition, topic));
         //threadPoolExecutor.execute(() -> handleUpdate(partition));
         return Collections.emptyList();
     }
@@ -71,6 +71,8 @@ public class Trigger implements ITrigger {
         properties.put("bootstrap.servers", "10.105.22.175:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("reconnect.backoff.ms", "1800000");
+        properties.put("request.timeout.ms", "1800000");
         return properties;
     }
 

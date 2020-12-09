@@ -21,11 +21,11 @@ import java.util.concurrent.Callable;
 public class TriggerThread implements Callable<Object> {
     org.slf4j.Logger logger;
     private Partition partition;
-    private Producer<String, String> producer;
+    //private Producer<String, String> producer;
     private String topic;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition,String topic) {
-        this.producer = producer;
+    public TriggerThread(Partition partition,String topic) {
+        //this.producer = producer;
         this.partition = partition;
         this.topic = topic;
         this.logger = Trigger.getLogger();
@@ -99,12 +99,12 @@ public class TriggerThread implements Callable<Object> {
         try {
             //client.listTopics(new ListTopicsOptions().timeoutMs(1000)).listings().get();
             if (Trigger.getKafkaStatus()) {
-                producer.send(record);
+                //producer.send(record);
             } else {
                 logger.info("================Kafka is down, not sending record============");
             }
         } catch (Exception ex) {
-            logger.info("==============Exception while sending record to producer===============");
+            logger.info("============Exception while sending record to producer==============");
         }
         return null;
     }

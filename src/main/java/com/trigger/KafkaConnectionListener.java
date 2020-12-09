@@ -18,12 +18,12 @@ public class KafkaConnectionListener extends TimerTask {
     @Override
     public void run() {
         try {
-            logger.info("===============Running kafka connection check=============");
             kafkaAdmin.listTopics(new ListTopicsOptions().timeoutMs(5000)).listings().get();
             Trigger.setKafkaStatus(true);
+            logger.info("===============Kafka Service is Running=============");
         } catch (Exception ex) {
-            logger.info("=================Kafka is not available, timed out after 5000 ms==============");
             Trigger.setKafkaStatus(false);
+            logger.info("=================Kafka Service is not running, timed out after 5000 ms==============");
         }
     }
 }
