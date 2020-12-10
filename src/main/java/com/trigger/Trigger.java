@@ -9,6 +9,9 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -25,6 +28,7 @@ public class Trigger implements ITrigger {
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private AdminClient client;
+    private BufferedWriter fileWriter;
     private Timer timer = new Timer();
 
     /**
@@ -39,6 +43,12 @@ public class Trigger implements ITrigger {
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
+        try {
+            fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/" + Thread.currentThread().getName().substring(7), true));
+        } catch (IOException e) {
+            logger.info("Error in opening fileWriter file");
+            e.printStackTrace();
+        }
     }
 
     static boolean getKafkaStatus() {
@@ -58,7 +68,7 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
+        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic, fileWriter));
         //threadPoolExecutor.execute(() -> handleUpdate(partition));
         return Collections.emptyList();
     }

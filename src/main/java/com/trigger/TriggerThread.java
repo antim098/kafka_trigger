@@ -14,7 +14,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,16 +26,16 @@ public class TriggerThread implements Callable<Object> {
     private String topic;
     private BufferedWriter fileWriter;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic, BufferedWriter writer) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
         this.logger = Trigger.getLogger();
+        this.fileWriter = writer;
     }
 
     @Override
     public Object call() throws Exception {
-        fileWriter = new BufferedWriter(new FileWriter("/home/cassandra/triggerLogs/" + Thread.currentThread().getName().substring(7), true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
@@ -110,7 +109,7 @@ public class TriggerThread implements Callable<Object> {
             logger.info("============Exception while sending record to producer==============");
             fileWriter.write(value);
         } finally {
-            fileWriter.close();
+            fileWriter.flush();
         }
         return null;
     }
