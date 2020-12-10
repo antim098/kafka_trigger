@@ -22,7 +22,7 @@ public class Trigger implements ITrigger {
     public static boolean isKafkaAlive;
     private static Logger logger = null;
     private String topic;
-    //private Producer<String, String> producer;
+    private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private AdminClient client;
     private Timer timer = new Timer();
@@ -33,11 +33,11 @@ public class Trigger implements ITrigger {
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
-        //producer = new KafkaProducer<String, String>(getProps());
+        producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(getProps());
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
-        threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     }
 
@@ -58,7 +58,7 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(partition, topic));
+        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
         //threadPoolExecutor.execute(() -> handleUpdate(partition));
         return Collections.emptyList();
     }

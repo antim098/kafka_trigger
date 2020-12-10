@@ -13,6 +13,8 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -21,11 +23,12 @@ import java.util.concurrent.Callable;
 public class TriggerThread implements Callable<Object> {
     org.slf4j.Logger logger;
     private Partition partition;
-    //private Producer<String, String> producer;
+    private Producer<String, String> producer;
     private String topic;
+    private BufferedWriter fileWriter;
 
-    public TriggerThread(Partition partition,String topic) {
-        //this.producer = producer;
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
+        this.producer = producer;
         this.partition = partition;
         this.topic = topic;
         this.logger = Trigger.getLogger();
@@ -33,6 +36,7 @@ public class TriggerThread implements Callable<Object> {
 
     @Override
     public Object call() throws Exception {
+        fileWriter = new BufferedWriter(new FileWriter("\\home\\cassandra\\triggerLogs\\" + Thread.currentThread().getName().substring(7), true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
@@ -97,14 +101,16 @@ public class TriggerThread implements Callable<Object> {
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
         try {
-            //client.listTopics(new ListTopicsOptions().timeoutMs(1000)).listings().get();
             if (Trigger.getKafkaStatus()) {
-                //producer.send(record);
+                producer.send(record);
             } else {
-                logger.info("================Kafka is down, not sending record============");
+                fileWriter.write(value);
             }
         } catch (Exception ex) {
             logger.info("============Exception while sending record to producer==============");
+            fileWriter.write(value);
+        } finally {
+            fileWriter.close();
         }
         return null;
     }
