@@ -36,7 +36,7 @@ public class TriggerThread implements Callable<Object> {
 
     @Override
     public Object call() throws Exception {
-        fileWriter = new BufferedWriter(new FileWriter("\\home\\cassandra\\triggerLogs\\" + Thread.currentThread().getName().substring(7), true));
+        fileWriter = new BufferedWriter(new FileWriter("/home/cassandra/triggerLogs/" + Thread.currentThread().getName().substring(7), true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
