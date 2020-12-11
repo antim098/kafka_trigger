@@ -107,7 +107,7 @@ public class TriggerThread implements Callable<Object> {
             }
         } catch (Exception ex) {
             logger.info("============Exception while sending record to producer==============");
-            logger.error("ERROR", ex);
+            logger.error("ERROR", ex.getMessage(), ex);
             //fileWriter.write("\n" + value);
         } finally {
             fileWriter.flush();
