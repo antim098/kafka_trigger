@@ -44,7 +44,8 @@ public class Trigger implements ITrigger {
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
         try {
-            fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/" + Thread.currentThread().getName().substring(7), true));
+            fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
+            fileWriter.write("testing");
         } catch (IOException e) {
             logger.info("Error in opening fileWriter file");
             e.printStackTrace();
