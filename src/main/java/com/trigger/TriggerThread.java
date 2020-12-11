@@ -36,7 +36,7 @@ public class TriggerThread implements Callable<Object> {
 
     @Override
     public Object call() throws Exception {
-        fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/triggerdata.txt", true));
+        fileWriter = new BufferedWriter(new FileWriter("triggerdata.txt", true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
