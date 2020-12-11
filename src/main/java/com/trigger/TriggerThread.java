@@ -102,9 +102,9 @@ public class TriggerThread implements Callable<Object> {
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
             } else {
-                fileWriter.write("\n" + value);
                 logger.info("writer is " + fileWriter);
                 logger.info("written to fil");
+                fileWriter.write("\n" + value);
             }
         } catch (Exception ex) {
             logger.info("value is" + value);

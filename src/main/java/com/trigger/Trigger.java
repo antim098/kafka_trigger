@@ -9,9 +9,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -22,13 +19,13 @@ import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
 
-    public static boolean isKafkaAlive;
+    public static boolean isKafkaAlive = false;
     private static Logger logger = null;
     private String topic;
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private AdminClient client;
-   // private BufferedWriter fileWriter;
+    // private BufferedWriter fileWriter;
     private Timer timer = new Timer();
 
     /**
