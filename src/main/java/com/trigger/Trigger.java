@@ -36,8 +36,8 @@ public class Trigger implements ITrigger {
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
-        client = AdminClient.create(getProps());
-        timer.schedule(new KafkaConnectionListener(client), 0, 60000);
+        //client = AdminClient.create(getProps());
+        //timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
 //        try {
