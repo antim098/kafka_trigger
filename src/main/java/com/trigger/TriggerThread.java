@@ -118,7 +118,7 @@ public class TriggerThread implements Callable<Object> {
             logger.error("ERROR", ex.getMessage(), ex);
             //fileWriter.write("\n" + value);
         } finally {
-            fileWriter.close();
+            fileWriter.flush();
         }
         return null;
     }
