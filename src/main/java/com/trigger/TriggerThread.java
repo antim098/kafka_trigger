@@ -104,11 +104,12 @@ public class TriggerThread implements Callable<Object> {
             } else {
                 fileWriter.write("\n" + value);
             }
-        } catch (Exception ex) {
-            logger.info("============Exception while sending record to producer==============");
-            logger.info(String.valueOf(ex.getStackTrace()));
-            //fileWriter.write("\n" + value);
         }
+//        } catch (Exception ex) {
+//            logger.info("============Exception while sending record to producer==============");
+//            logger.info(String.valueOf(ex.getStackTrace()));
+//            //fileWriter.write("\n" + value);
+//        }
 //        } finally {
 //            fileWriter.close()
 //        }
@@ -127,3 +128,4 @@ public class TriggerThread implements Callable<Object> {
         return row.deletion().time().markedForDeleteAt() > Long.MIN_VALUE;
     }
 }
+
