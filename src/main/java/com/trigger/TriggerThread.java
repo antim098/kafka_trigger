@@ -101,7 +101,7 @@ public class TriggerThread implements Callable<Object> {
         }
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        fileWriter = Writer.getWriter();
+        fileWriter = Trigger.getWriter();
         try {
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
