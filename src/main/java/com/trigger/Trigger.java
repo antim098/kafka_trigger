@@ -33,7 +33,7 @@ public class Trigger implements ITrigger {
     /**
      *
      */
-    public Trigger() throws IOException {
+    public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
@@ -44,7 +44,11 @@ public class Trigger implements ITrigger {
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
         fileWriter = Writer.getWriter();
         if(fileWriter==null) logger.info("==========writer is null in Trigger Class========");
-        fileWriter.write("testing");
+        try {
+            fileWriter.write("testing");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     static boolean getKafkaStatus() {
