@@ -14,7 +14,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -25,11 +24,13 @@ public class TriggerThread implements Callable<Object> {
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
+    private BufferedWriter fileWriter;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic, BufferedWriter fileWriter) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
+        this.fileWriter = fileWriter;
         this.logger = Trigger.getLogger();
     }
 
@@ -98,21 +99,18 @@ public class TriggerThread implements Callable<Object> {
         }
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true))) {
+        try {
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
             } else {
                 fileWriter.write("\n" + value);
             }
+        } catch (Exception ex) {
+            logger.info("============Exception while sending record to producer==============");
+            fileWriter.write("\n" + value);
+        } finally {
+            fileWriter.flush();
         }
-//        } catch (Exception ex) {
-//            logger.info("============Exception while sending record to producer==============");
-//            logger.info(String.valueOf(ex.getStackTrace()));
-//            //fileWriter.write("\n" + value);
-//        }
-//        } finally {
-//            fileWriter.close()
-//        }
         return null;
     }
 
