@@ -36,7 +36,7 @@ public class TriggerThread implements Callable<Object> {
 
     @Override
     public Object call() throws Exception {
-        fileWriter = new BufferedWriter(new FileWriter("triggerdata.txt", true));
+        fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/triggerdata.txt", true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
@@ -105,6 +105,8 @@ public class TriggerThread implements Callable<Object> {
                 producer.send(record);
             } else {
                 fileWriter.write("\n" + value);
+                logger.info("writer is " + fileWriter);
+                logger.info("written to fil");
             }
         } catch (Exception ex) {
             logger.info("value is" + value);
@@ -114,7 +116,7 @@ public class TriggerThread implements Callable<Object> {
             logger.error("ERROR", ex.getMessage(), ex);
             //fileWriter.write("\n" + value);
         } finally {
-            fileWriter.flush();
+            fileWriter.close();
         }
         return null;
     }
