@@ -14,6 +14,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,16 +27,16 @@ public class TriggerThread implements Callable<Object> {
     private String topic;
     private BufferedWriter fileWriter;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic, BufferedWriter fileWriter) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
-        this.fileWriter = fileWriter;
         this.logger = Trigger.getLogger();
     }
 
     @Override
     public Object call() throws Exception {
+        fileWriter = new BufferedWriter(new FileWriter("triggerdata.txt", true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
