@@ -25,17 +25,19 @@ public class TriggerThread implements Callable<Object> {
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
+    private BufferedWriter fileWriter;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic,BufferedWriter fileWriter) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
+        this.fileWriter = fileWriter;
         this.logger = Trigger.getLogger();
     }
 
     @Override
     public Object call() throws Exception {
-        BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
+        //BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
         obj.put("key", key);
