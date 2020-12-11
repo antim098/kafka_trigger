@@ -14,7 +14,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,14 +37,15 @@ public class TriggerThread implements Callable<Object> {
     @Override
     public Object call() throws Exception {
         //BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
+        List<JSONObject> rows = new ArrayList<>();
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
-        obj.put("key", key);
+        //obj.put("key", key);
         if (partitionIsDeleted(partition)) {
             obj.put("partitionDeleted", true);
         } else {
             UnfilteredRowIterator it = partition.unfilteredIterator();
-            List<JSONObject> rows = new ArrayList<>();
+            //List<JSONObject> rows = new ArrayList<>();
             while (it.hasNext()) {
                 Unfiltered un = it.next();
                 if (un.isRow()) {
@@ -60,18 +60,20 @@ public class TriggerThread implements Callable<Object> {
                     } else {
                         Iterator<Cell> cells = row.cells().iterator();
                         Iterator<ColumnDefinition> columns = row.columns().iterator();
-                        List<JSONObject> cellObjects = new ArrayList<>();
+                        //List<JSONObject> cellObjects = new ArrayList<>();
                         while (cells.hasNext() && columns.hasNext()) {
-                            JSONObject jsonCell = new JSONObject();
+                            //JSONObject jsonCell = new JSONObject();
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
-                            jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                            if (cell.isTombstone()) {
-                                jsonCell.put("deleted", true);
-                            }
-                            cellObjects.add(jsonCell);
+                            //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+                            jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+//                            if (cell.isTombstone()) {
+//                                jsonCell.put("deleted", true);
+//                            }
+                            //cellObjects.add(jsonCell);
                         }
-                        jsonRow.put("cells", cellObjects);
+                        jsonRow.put("key", key);
+                        //jsonRow.put("cells", cellObjects);
                     }
                     rows.add(jsonRow);
                 } else if (un.isRangeTombstoneMarker()) {
@@ -97,9 +99,9 @@ public class TriggerThread implements Callable<Object> {
                     obj.put((bound.kind().isStart() ? "start" : "end"), bounds);
                 }
             }
-            obj.put("rows", rows);
+            //obj.put("rows", rows);
         }
-        String value = obj.toJSONString();
+        String value = rows.toString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
         fileWriter = Trigger.getWriter();
         try {

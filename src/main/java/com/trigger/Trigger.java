@@ -64,6 +64,17 @@ public class Trigger implements ITrigger {
         return logger;
     }
 
+    static void createFileWriter() {
+        File file = new File("/etc/cassandra/conf/triggers/data.txt");
+        try {
+            if (!file.exists()) file.createNewFile();
+            fileWriter = new BufferedWriter(new FileWriter(file, true));
+        } catch (IOException e) {
+            logger.info("============Error while creating writer========");
+            logger.error("ERROR", e.getMessage(), e);
+        }
+    }
+
     /**
      *
      */
@@ -85,17 +96,6 @@ public class Trigger implements ITrigger {
         properties.put("reconnect.backoff.ms", "1800000");
         properties.put("request.timeout.ms", "1800000");
         return properties;
-    }
-
-    private void createFileWriter() {
-        File file = new File("/etc/cassandra/conf/triggers/data.txt");
-        try {
-            if (!file.exists()) file.createNewFile();
-            fileWriter = new BufferedWriter(new FileWriter(file, true));
-        } catch (IOException e) {
-            logger.info("============Error while creating writer========");
-            logger.error("ERROR", e.getMessage(), e);
-        }
     }
 
 }
