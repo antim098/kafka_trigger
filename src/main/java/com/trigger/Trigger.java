@@ -35,7 +35,7 @@ public class Trigger implements ITrigger {
      *
      */
     public Trigger() {
-        Thread.currentThread().setContextClassLoader(null);
+        //Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
@@ -47,7 +47,7 @@ public class Trigger implements ITrigger {
             fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
         } catch (IOException e) {
             logger.info("============Error in Trigger CLass while creating writer========");
-            e.printStackTrace();
+            logger.error("ERROR", e.getMessage(), e);
         }
         if (fileWriter == null) logger.info("============writer is null in Trigger Class========");
     }
