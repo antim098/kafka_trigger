@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,7 +28,7 @@ public class Trigger implements ITrigger {
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private AdminClient client;
-    private BufferedWriter fileWriter;
+    private static BufferedWriter fileWriter;
     private Timer timer = new Timer();
 
     /**
@@ -42,13 +43,13 @@ public class Trigger implements ITrigger {
         //timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
-        fileWriter = Writer.getWriter();
-        if(fileWriter==null) logger.info("==========writer is null in Trigger Class========");
         try {
-            fileWriter.write("testing");
+            fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
         } catch (IOException e) {
+            logger.info("============Error in Trigger CLass while creating writer========");
             e.printStackTrace();
         }
+        if (fileWriter == null) logger.info("============writer is null in Trigger Class========");
     }
 
     static boolean getKafkaStatus() {
@@ -57,6 +58,10 @@ public class Trigger implements ITrigger {
 
     static void setKafkaStatus(boolean value) {
         isKafkaAlive = value;
+    }
+
+    static BufferedWriter getWriter(){
+        return fileWriter;
     }
 
     static Logger getLogger() {
@@ -68,7 +73,7 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic, fileWriter));
+        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
         //threadPoolExecutor.execute(() -> handleUpdate(partition));
         return Collections.emptyList();
     }

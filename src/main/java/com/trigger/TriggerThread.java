@@ -27,11 +27,11 @@ public class TriggerThread implements Callable<Object> {
     private String topic;
     private BufferedWriter fileWriter;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic,BufferedWriter fileWriter) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
-        this.fileWriter = fileWriter;
+        //this.fileWriter = fileWriter;
         this.logger = Trigger.getLogger();
     }
 
@@ -101,6 +101,7 @@ public class TriggerThread implements Callable<Object> {
         }
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
+        fileWriter = Trigger.getWriter();
         try {
             logger.info("==========Inside try=========");
             if (Trigger.getKafkaStatus()) {
