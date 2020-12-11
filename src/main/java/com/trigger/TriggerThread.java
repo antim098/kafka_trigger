@@ -101,14 +101,11 @@ public class TriggerThread implements Callable<Object> {
         }
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        fileWriter = Trigger.getWriter();
+        fileWriter = Writer.getWriter();
         try {
-            logger.info("==========Inside try=========");
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
             } else {
-                logger.info("writer is " + fileWriter);
-                logger.info("written to fil");
                 fileWriter.write("\n" + value);
             }
         } catch (Exception ex) {

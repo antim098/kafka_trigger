@@ -9,10 +9,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -23,9 +19,9 @@ import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
 
-    public static boolean isKafkaAlive = false;
+    public static boolean isKafkaAlive;
     private static Logger logger = null;
-    private static BufferedWriter fileWriter;
+    //private static BufferedWriter fileWriter;
     private String topic;
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
@@ -40,21 +36,10 @@ public class Trigger implements ITrigger {
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
-        //client = AdminClient.create(getProps());
-        //timer.schedule(new KafkaConnectionListener(client), 0, 60000);
+        client = AdminClient.create(getProps());
+        timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
-        File file = new File("/home/impadmin/triggerLogs/data.txt");
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-                fileWriter = new BufferedWriter(new FileWriter(file, true));
-            } catch (IOException e) {
-                logger.info("============Error in Trigger CLass while creating writer========");
-                logger.error("ERROR", e.getMessage(), e);
-            }
-            if (fileWriter == null) logger.info("============writer is null in Trigger Class========");
-        }
     }
 
     static boolean getKafkaStatus() {
@@ -65,9 +50,6 @@ public class Trigger implements ITrigger {
         isKafkaAlive = value;
     }
 
-    static BufferedWriter getWriter() {
-        return fileWriter;
-    }
 
     static Logger getLogger() {
         return logger;
@@ -95,5 +77,6 @@ public class Trigger implements ITrigger {
         properties.put("request.timeout.ms", "1800000");
         return properties;
     }
+
 
 }
