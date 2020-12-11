@@ -33,7 +33,7 @@ public class Trigger implements ITrigger {
     /**
      *
      */
-    public Trigger() {
+    public Trigger() throws IOException {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
         producer = new KafkaProducer<String, String>(getProps());
@@ -42,13 +42,9 @@ public class Trigger implements ITrigger {
         //timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
-        try {
-            fileWriter = Writer.getWriter();
-            fileWriter.write("testing");
-        } catch (IOException e) {
-            logger.info("Error in opening fileWriter file");
-            e.printStackTrace();
-        }
+        fileWriter = Writer.getWriter();
+        if(fileWriter==null) logger.info("==========writer is null in Trigger Class========");
+        fileWriter.write("testing");
     }
 
     static boolean getKafkaStatus() {
@@ -68,7 +64,7 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic,fileWriter));
+        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic, fileWriter));
         //threadPoolExecutor.execute(() -> handleUpdate(partition));
         return Collections.emptyList();
     }
