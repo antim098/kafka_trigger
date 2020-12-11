@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
@@ -24,11 +25,11 @@ public class Trigger implements ITrigger {
 
     public static boolean isKafkaAlive = false;
     private static Logger logger = null;
+    private static BufferedWriter fileWriter;
     private String topic;
     private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private AdminClient client;
-    private static BufferedWriter fileWriter;
     private Timer timer = new Timer();
 
     /**
@@ -43,13 +44,17 @@ public class Trigger implements ITrigger {
         //timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
-        try {
-            fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
-        } catch (IOException e) {
-            logger.info("============Error in Trigger CLass while creating writer========");
-            logger.error("ERROR", e.getMessage(), e);
+        File file = new File("/home/impadmin/triggerLogs/data.txt");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+                fileWriter = new BufferedWriter(new FileWriter(file, true));
+            } catch (IOException e) {
+                logger.info("============Error in Trigger CLass while creating writer========");
+                logger.error("ERROR", e.getMessage(), e);
+            }
+            if (fileWriter == null) logger.info("============writer is null in Trigger Class========");
         }
-        if (fileWriter == null) logger.info("============writer is null in Trigger Class========");
     }
 
     static boolean getKafkaStatus() {
@@ -60,7 +65,7 @@ public class Trigger implements ITrigger {
         isKafkaAlive = value;
     }
 
-    static BufferedWriter getWriter(){
+    static BufferedWriter getWriter() {
         return fileWriter;
     }
 
