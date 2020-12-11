@@ -98,7 +98,7 @@ public class TriggerThread implements Callable<Object> {
         }
         String value = obj.toJSONString();
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs" + Thread.currentThread().getName().substring(7), true))) {
+        try (BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/" + Thread.currentThread().getName().substring(7), true))) {
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
             } else {
