@@ -2,8 +2,6 @@ package com.trigger;
 
 import org.apache.cassandra.config.ColumnDefinition;
 import org.apache.cassandra.db.Clustering;
-import org.apache.cassandra.db.ClusteringBound;
-import org.apache.cassandra.db.ClusteringPrefix;
 import org.apache.cassandra.db.partitions.Partition;
 import org.apache.cassandra.db.rows.Cell;
 import org.apache.cassandra.db.rows.Row;
@@ -55,51 +53,53 @@ public class TriggerThread implements Callable<Object> {
                     String clusteringKey = clustering.toCQLString(partition.metadata());
                     jsonRow.put("clusteringKey", clusteringKey);
                     Row row = partition.getRow(clustering);
-
-                    if (rowIsDeleted(row)) {
-                        jsonRow.put("rowDeleted", true);
-                    } else {
-                        Iterator<Cell> cells = row.cells().iterator();
-                        Iterator<ColumnDefinition> columns = row.columns().iterator();
-                        //List<JSONObject> cellObjects = new ArrayList<>();
-                        while (cells.hasNext() && columns.hasNext()) {
-                            //JSONObject jsonCell = new JSONObject();
-                            ColumnDefinition columnDef = columns.next();
-                            Cell cell = cells.next();
-                            //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                            jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                            if (cell.isTombstone()) {
-                                jsonRow.put(columnDef.name.toString(), "deleted");
+                    if (isInsert(row)) {
+                        if (rowIsDeleted(row)) {
+                            jsonRow.put("rowDeleted", true);
+                        } else {
+                            Iterator<Cell> cells = row.cells().iterator();
+                            Iterator<ColumnDefinition> columns = row.columns().iterator();
+                            //List<JSONObject> cellObjects = new ArrayList<>();
+                            while (cells.hasNext() && columns.hasNext()) {
+                                //JSONObject jsonCell = new JSONObject();
+                                ColumnDefinition columnDef = columns.next();
+                                Cell cell = cells.next();
+                                //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+                                if (cell.isTombstone()) {
+                                    jsonRow.put(columnDef.name.toString(), "deleted");
+                                }
+                                //cellObjects.add(jsonCell);
                             }
-                            //cellObjects.add(jsonCell);
+                            jsonRow.put("table", table);
+                            jsonRow.put("key", key);
+                            //jsonRow.put("cells", cellObjects);
                         }
-                        jsonRow.put("table", table);
-                        jsonRow.put("key", key);
-                        //jsonRow.put("cells", cellObjects);
+                        jsonRow.put("partition", obj);
+                        rows.add(jsonRow);
                     }
-                    jsonRow.put("partition", obj);
-                    rows.add(jsonRow);
-                } else if (un.isRangeTombstoneMarker()) {
-                    obj.put("rowRangeDeleted", true);
-                    ClusteringBound bound = (ClusteringBound) un.clustering();
-                    List<JSONObject> bounds = new ArrayList<>();
-                    for (int i = 0; i < bound.size(); i++) {
-                        String clusteringBound = partition.metadata().comparator.subtype(i).getString(bound.get(i));
-                        JSONObject boundObject = new JSONObject();
-                        boundObject.put("clusteringKey", clusteringBound);
-                        if (i == bound.size() - 1) {
-                            if (bound.kind().isStart()) {
-                                boundObject.put("inclusive",
-                                        bound.kind() == ClusteringPrefix.Kind.INCL_START_BOUND);
-                            }
-                            if (bound.kind().isEnd()) {
-                                boundObject.put("inclusive",
-                                        bound.kind() == ClusteringPrefix.Kind.INCL_END_BOUND);
-                            }
-                        }
-                        bounds.add(boundObject);
-                    }
-                    obj.put((bound.kind().isStart() ? "start" : "end"), bounds);
+//                } else if (un.isRangeTombstoneMarker()) {
+//                    obj.put("rowRangeDeleted", true);
+//                    ClusteringBound bound = (ClusteringBound) un.clustering();
+//                    List<JSONObject> bounds = new ArrayList<>();
+//                    for (int i = 0; i < bound.size(); i++) {
+//                        String clusteringBound = partition.metadata().comparator.subtype(i).getString(bound.get(i));
+//                        JSONObject boundObject = new JSONObject();
+//                        boundObject.put("clusteringKey", clusteringBound);
+//                        if (i == bound.size() - 1) {
+//                            if (bound.kind().isStart()) {
+//                                boundObject.put("inclusive",
+//                                        bound.kind() == ClusteringPrefix.Kind.INCL_START_BOUND);
+//                            }
+//                            if (bound.kind().isEnd()) {
+//                                boundObject.put("inclusive",
+//                                        bound.kind() == ClusteringPrefix.Kind.INCL_END_BOUND);
+//                            }
+//                        }
+//                        bounds.add(boundObject);
+//                    }
+//                    obj.put((bound.kind().isStart() ? "start" : "end"), bounds);
+//                }
                 }
             }
             //obj.put("rows", rows);
@@ -124,6 +124,10 @@ public class TriggerThread implements Callable<Object> {
             fileWriter.flush();
         }
         return null;
+    }
+
+    private boolean isInsert(Row row) {
+        return row.primaryKeyLivenessInfo().timestamp() != Long.MIN_VALUE;
     }
 
     private String getKey(Partition partition) {
