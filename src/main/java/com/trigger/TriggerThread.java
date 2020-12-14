@@ -75,7 +75,7 @@ public class TriggerThread implements Callable<Object> {
                             jsonRow.put("key", key);
                             //jsonRow.put("cells", cellObjects);
                         }
-                        jsonRow.put("partition", obj);
+                        //jsonRow.put("partition", obj);
                         rows.add(jsonRow);
                     }
 //                } else if (un.isRangeTombstoneMarker()) {
