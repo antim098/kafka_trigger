@@ -37,6 +37,7 @@ public class TriggerThread implements Callable<Object> {
     @Override
     public Object call() throws Exception {
         //BufferedWriter fileWriter = new BufferedWriter(new FileWriter("/home/impadmin/triggerLogs/data.txt", true));
+        String table = partition.metadata().cfName;
         List<JSONObject> rows = new ArrayList<>();
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
@@ -72,6 +73,7 @@ public class TriggerThread implements Callable<Object> {
                             }
                             //cellObjects.add(jsonCell);
                         }
+                        jsonRow.put("table", table);
                         jsonRow.put("key", key);
                         //jsonRow.put("cells", cellObjects);
                     }
