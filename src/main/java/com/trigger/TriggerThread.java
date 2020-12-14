@@ -56,7 +56,7 @@ public class TriggerThread implements Callable<Object> {
                     Row row = partition.getRow(clustering);
 
                     if (rowIsDeleted(row)) {
-                        obj.put("rowDeleted", true);
+                        jsonRow.put("rowDeleted", true);
                     } else {
                         Iterator<Cell> cells = row.cells().iterator();
                         Iterator<ColumnDefinition> columns = row.columns().iterator();
@@ -75,6 +75,7 @@ public class TriggerThread implements Callable<Object> {
                         jsonRow.put("key", key);
                         //jsonRow.put("cells", cellObjects);
                     }
+                    jsonRow.put("partition", obj);
                     rows.add(jsonRow);
                 } else if (un.isRangeTombstoneMarker()) {
                     obj.put("rowRangeDeleted", true);

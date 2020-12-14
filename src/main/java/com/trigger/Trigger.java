@@ -27,10 +27,10 @@ public class Trigger implements ITrigger {
     private static Logger logger = null;
     private static BufferedWriter fileWriter;
     private String topic;
-    private Producer<String, String> producer;
-    private ThreadPoolExecutor threadPoolExecutor;
-    private AdminClient client;
-    private Timer timer = new Timer();
+    private static Producer<String, String> producer;
+    private static ThreadPoolExecutor threadPoolExecutor;
+    private static AdminClient client;
+    private static Timer timer = new Timer();
 
     /**
      *
@@ -64,14 +64,16 @@ public class Trigger implements ITrigger {
         return logger;
     }
 
-    static void createFileWriter() {
-        File file = new File("/etc/cassandra/conf/triggers/data.txt");
-        try {
-            if (!file.exists()) file.createNewFile();
-            fileWriter = new BufferedWriter(new FileWriter(file, true));
-        } catch (IOException e) {
-            logger.info("============Error while creating writer========");
-            logger.error("ERROR", e.getMessage(), e);
+    private static void createFileWriter() {
+        if (fileWriter == null) {
+            File file = new File("/etc/cassandra/conf/triggers/data.txt");
+            try {
+                if (!file.exists()) file.createNewFile();
+                fileWriter = new BufferedWriter(new FileWriter(file, true));
+            } catch (IOException e) {
+                logger.info("============Error while creating writer========");
+                logger.error("ERROR", e.getMessage(), e);
+            }
         }
     }
 
