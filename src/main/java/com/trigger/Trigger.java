@@ -36,7 +36,7 @@ public class Trigger implements ITrigger {
      *
      */
     public Trigger() {
-        Thread.currentThread().setContextClassLoader(null);
+        //Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
         createFileWriter();
         producer = new KafkaProducer<String, String>(getProps());
