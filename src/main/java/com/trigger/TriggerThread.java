@@ -67,9 +67,9 @@ public class TriggerThread implements Callable<Object> {
                             Cell cell = cells.next();
                             //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
                             jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-//                            if (cell.isTombstone()) {
-//                                jsonCell.put("deleted", true);
-//                            }
+                            if (cell.isTombstone()) {
+                                jsonRow.put(columnDef.name.toString(), "deleted");
+                            }
                             //cellObjects.add(jsonCell);
                         }
                         jsonRow.put("key", key);
