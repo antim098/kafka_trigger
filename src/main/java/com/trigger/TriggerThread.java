@@ -11,6 +11,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -66,7 +67,7 @@ public class TriggerThread implements Callable<Object> {
                                 ColumnDefinition columnDef = columns.next();
                                 Cell cell = cells.next();
                                 //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                                jsonRow.put(columnDef.name.toString(), new String(cell.value().array()));
+                                jsonRow.put(columnDef.name.toString(), new String(cell.value().array(), Charset.defaultCharset()));
                                 if (cell.isTombstone()) {
                                     jsonRow.put(columnDef.name.toString(), "deleted");
                                 }
