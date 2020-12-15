@@ -9,10 +9,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -23,14 +19,14 @@ import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
 
-    public static boolean isKafkaAlive;
+    private static boolean isKafkaAlive;
     private static Logger logger = null;
-    private static BufferedWriter fileWriter;
-    private String topic;
     private static Producer<String, String> producer;
     private static ThreadPoolExecutor threadPoolExecutor;
     private static AdminClient client;
     private static Timer timer = new Timer();
+    //private static BufferedWriter fileWriter;
+    private String topic;
 
     /**
      *
@@ -38,7 +34,7 @@ public class Trigger implements ITrigger {
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
-        createFileWriter();
+        //createFileWriter();
         producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(getProps());
@@ -56,26 +52,26 @@ public class Trigger implements ITrigger {
         isKafkaAlive = value;
     }
 
-    static BufferedWriter getWriter() {
-        return fileWriter;
-    }
+//    static BufferedWriter getWriter() {
+//        return fileWriter;
+//    }
 
     static Logger getLogger() {
         return logger;
     }
 
-    private static void createFileWriter() {
-        if (fileWriter == null) {
-            File file = new File("/etc/cassandra/conf/triggers/data.txt");
-            try {
-                if (!file.exists()) file.createNewFile();
-                fileWriter = new BufferedWriter(new FileWriter(file, true));
-            } catch (IOException e) {
-                logger.info("============Error while creating writer========");
-                logger.error("ERROR", e.getMessage(), e);
-            }
-        }
-    }
+//    private static void createFileWriter() {
+//        if (fileWriter == null) {
+//            File file = new File("/etc/cassandra/conf/triggers/data.txt");
+//            try {
+//                if (!file.exists()) file.createNewFile();
+//                fileWriter = new BufferedWriter(new FileWriter(file, true));
+//            } catch (IOException e) {
+//                logger.info("============Error while creating writer========");
+//                logger.error("ERROR", e.getMessage(), e);
+//            }
+//        }
+//    }
 
     /**
      *

@@ -22,7 +22,7 @@ public class TriggerThread implements Callable<Object> {
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
-    private BufferedWriter fileWriter;
+    //private BufferedWriter fileWriter;
 
     public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
@@ -38,8 +38,8 @@ public class TriggerThread implements Callable<Object> {
         String table = partition.metadata().cfName;
         List<JSONObject> rows = new ArrayList<>();
         String key = getKey(partition);
+        String[] keys = key.split(":");
         JSONObject obj = new JSONObject();
-        Row row = null;
         //obj.put("key", key);
         if (partitionIsDeleted(partition)) {
             obj.put("partitionDeleted", true);
@@ -52,8 +52,8 @@ public class TriggerThread implements Callable<Object> {
                     JSONObject jsonRow = new JSONObject();
                     Clustering clustering = (Clustering) un.clustering();
                     String clusteringKey = clustering.toCQLString(partition.metadata());
-                    jsonRow.put("clusteringKey", clusteringKey);
-                    row = partition.getRow(clustering);
+                    jsonRow.put("raw_ts", clusteringKey);
+                    Row row = partition.getRow(clustering);
                     if (isInsert(row)) {
                         if (rowIsDeleted(row)) {
                             jsonRow.put("rowDeleted", true);
@@ -73,7 +73,9 @@ public class TriggerThread implements Callable<Object> {
                                 //cellObjects.add(jsonCell);
                             }
                             jsonRow.put("table", table);
-                            jsonRow.put("key", key);
+                            jsonRow.put("ds", keys[0]);
+                            jsonRow.put("fallout_name", keys[1]);
+                            jsonRow.put("reason", keys[2]);
                             //jsonRow.put("cells", cellObjects);
                         }
                         //jsonRow.put("partition", obj);
@@ -106,27 +108,25 @@ public class TriggerThread implements Callable<Object> {
             //obj.put("rows", rows);
         }
         String value = rows.toString();
-        ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        fileWriter = Trigger.getWriter();
+        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
+        //fileWriter = Trigger.getWriter();
         try {
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
             } else {
-                fileWriter.write("\n" + value);
-                fileWriter.write(String.valueOf(row));
-                fileWriter.write(String.valueOf(partition.stats()));
-                fileWriter.write(String.valueOf(partition.metadata()));
+                //fileWriter.write("\n" + value);
             }
         } catch (Exception ex) {
-            logger.info("value is" + value);
-            logger.info("writer is " + fileWriter);
-            logger.info("record is" + record);
+            //logger.info("value is" + value);
+            //logger.info("writer is " + fileWriter);
+            //logger.info("record is" + record);
             logger.info("============Exception while sending record to producer==============");
             logger.error("ERROR", ex.getMessage(), ex);
             //fileWriter.write("\n" + value);
-        } finally {
-            fileWriter.flush();
         }
+//        finally {
+//            fileWriter.flush();
+//        }
         return null;
     }
 
