@@ -11,7 +11,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -50,6 +49,7 @@ public class TriggerThread implements Callable<Object> {
                 Unfiltered un = it.next();
                 if (un.isRow()) {
                     JSONObject jsonRow = new JSONObject();
+                    JSONObject payload = new JSONObject();
                     Clustering clustering = (Clustering) un.clustering();
                     String clusteringKey = clustering.toCQLString(partition.metadata());
                     jsonRow.put("raw_ts", clusteringKey);
@@ -66,7 +66,7 @@ public class TriggerThread implements Callable<Object> {
                                 ColumnDefinition columnDef = columns.next();
                                 Cell cell = cells.next();
                                 //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+                                jsonRow.put(columnDef.name.toString(), cell.value().toString());
                                 if (cell.isTombstone()) {
                                     jsonRow.put(columnDef.name.toString(), "deleted");
                                 }
@@ -78,8 +78,9 @@ public class TriggerThread implements Callable<Object> {
                             jsonRow.put("reason", keys[2]);
                             //jsonRow.put("cells", cellObjects);
                         }
+                        payload.put("payload", jsonRow);
                         //jsonRow.put("partition", obj);
-                        rows.add(jsonRow);
+                        rows.add(payload);
                     }
 //                } else if (un.isRangeTombstoneMarker()) {
 //                    obj.put("rowRangeDeleted", true);
