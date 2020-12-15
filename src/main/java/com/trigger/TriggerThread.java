@@ -1,5 +1,6 @@
 package com.trigger;
 
+import io.netty.util.CharsetUtil;
 import org.apache.cassandra.config.ColumnDefinition;
 import org.apache.cassandra.db.Clustering;
 import org.apache.cassandra.db.partitions.Partition;
@@ -67,7 +68,7 @@ public class TriggerThread implements Callable<Object> {
                                 ColumnDefinition columnDef = columns.next();
                                 Cell cell = cells.next();
                                 //jsonCell.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                                jsonRow.put(columnDef.name.toString(), new String(cell.value().array(), Charset.defaultCharset()));
+                                jsonRow.put(columnDef.name.toString(), new String(cell.value().array(), CharsetUtil.US_ASCII));
                                 if (cell.isTombstone()) {
                                     jsonRow.put(columnDef.name.toString(), "deleted");
                                 }
