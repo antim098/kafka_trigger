@@ -39,6 +39,7 @@ public class TriggerThread implements Callable<Object> {
         List<JSONObject> rows = new ArrayList<>();
         String key = getKey(partition);
         JSONObject obj = new JSONObject();
+        Row row = null;
         //obj.put("key", key);
         if (partitionIsDeleted(partition)) {
             obj.put("partitionDeleted", true);
@@ -52,7 +53,7 @@ public class TriggerThread implements Callable<Object> {
                     Clustering clustering = (Clustering) un.clustering();
                     String clusteringKey = clustering.toCQLString(partition.metadata());
                     jsonRow.put("clusteringKey", clusteringKey);
-                    Row row = partition.getRow(clustering);
+                    row = partition.getRow(clustering);
                     if (isInsert(row)) {
                         if (rowIsDeleted(row)) {
                             jsonRow.put("rowDeleted", true);
@@ -112,6 +113,7 @@ public class TriggerThread implements Callable<Object> {
                 producer.send(record);
             } else {
                 fileWriter.write("\n" + value);
+                fileWriter.write(String.valueOf(row));
                 fileWriter.write(String.valueOf(partition.stats()));
                 fileWriter.write(String.valueOf(partition.metadata()));
             }
