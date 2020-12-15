@@ -88,7 +88,7 @@ public class Trigger implements ITrigger {
      */
     private Properties getProps() {
         Properties properties = new Properties();
-        properties.put("bootstrap.servers", "10.105.22.175:9092");
+        properties.put("bootstrap.servers", "172.26.32.31:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("reconnect.backoff.ms", "1800000");
