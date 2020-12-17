@@ -20,7 +20,7 @@ public class KafkaConnectionListener extends TimerTask {
         try {
             kafkaAdmin.listTopics(new ListTopicsOptions().timeoutMs(5000)).listings().get();
             Trigger.setKafkaStatus(true);
-            logger.info("===============Kafka Service is Running=============");
+            logger.info("=========================Kafka Service is Running========================");
         } catch (Exception ex) {
             Trigger.setKafkaStatus(false);
             logger.info("=================Kafka Service is not running, timed out after 5000 ms==============");

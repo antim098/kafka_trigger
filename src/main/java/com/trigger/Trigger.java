@@ -19,13 +19,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
 
-    private static boolean isKafkaAlive;
-    private static Logger logger = null;
+    private static boolean isKafkaAlive = true;
+    private static Logger logger;
     private static Producer<String, String> producer;
     private static ThreadPoolExecutor threadPoolExecutor;
     private static AdminClient client;
     private static Timer timer = new Timer();
-    //private static BufferedWriter fileWriter;
     private String topic;
 
     /**
@@ -34,7 +33,6 @@ public class Trigger implements ITrigger {
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
         topic = "trigger";
-        //createFileWriter();
         producer = new KafkaProducer<String, String>(getProps());
         logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(getProps());
@@ -48,30 +46,30 @@ public class Trigger implements ITrigger {
         return isKafkaAlive;
     }
 
-    static void setKafkaStatus(boolean value) {
+    static synchronized void setKafkaStatus(boolean value) {
         isKafkaAlive = value;
     }
 
-//    static BufferedWriter getWriter() {
-//        return fileWriter;
-//    }
 
     static Logger getLogger() {
         return logger;
     }
 
-//    private static void createFileWriter() {
-//        if (fileWriter == null) {
-//            File file = new File("/etc/cassandra/conf/triggers/data.txt");
-//            try {
-//                if (!file.exists()) file.createNewFile();
-//                fileWriter = new BufferedWriter(new FileWriter(file, true));
-//            } catch (IOException e) {
-//                logger.info("============Error while creating writer========");
-//                logger.error("ERROR", e.getMessage(), e);
-//            }
-//        }
-//    }
+    // FileWriter block
+    /**
+     private static void createFileWriter() {
+     if (fileWriter == null) {
+     File file = new File("/etc/cassandra/conf/triggers/data.txt");
+     try {
+     if (!file.exists()) file.createNewFile();
+     fileWriter = new BufferedWriter(new FileWriter(file, true));
+     } catch (IOException e) {
+     logger.info("============Error while creating writer========");
+     logger.error("ERROR", e.getMessage(), e);
+     }
+     }
+     }
+     */
 
     /**
      *
@@ -79,7 +77,6 @@ public class Trigger implements ITrigger {
     @Override
     public Collection<Mutation> augment(Partition partition) {
         threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
-        //threadPoolExecutor.execute(() -> handleUpdate(partition));
         return Collections.emptyList();
     }
 
@@ -91,8 +88,9 @@ public class Trigger implements ITrigger {
         properties.put("bootstrap.servers", "10.105.22.175:9092");
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("reconnect.backoff.ms", "1800000");
-        properties.put("request.timeout.ms", "1800000");
+        properties.put("max.block.ms", "15000"); //Time for which the producer will block on send() method
+        //properties.put("reconnect.backoff.ms", "1800000"); // Producer reconnect time to delay frequent reconnection
+        //properties.put("request.timeout.ms", "1800000"); //Adminclient reconnect time to delay frequent reconnection
         return properties;
     }
 
