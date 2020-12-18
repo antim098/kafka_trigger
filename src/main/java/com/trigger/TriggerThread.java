@@ -40,8 +40,13 @@ public class TriggerThread implements Callable<Object> {
         String key = getKey(partition);
         String[] partitionKeys = key.split(":");
         JSONObject partitionColsJson = new JSONObject();
-        for (int i = 0; i < partitionColumns.size(); i++) {
-            partitionColsJson.put(partitionColumns.get(i).toString(), partitionKeys[i]);
+        try {
+            for (int i = 0; i < partitionColumns.size(); i++) {
+                partitionColsJson.put(partitionColumns.get(i).toString(), partitionKeys[i]);
+            }
+        } catch (Exception ex) {
+            logger.info("===================Error in parittion columns==============");
+            logger.error("ERROR", ex.getMessage(), ex);
         }
         List<JSONObject> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
@@ -53,8 +58,13 @@ public class TriggerThread implements Callable<Object> {
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
                 String[] clusteringKeys = clusteringKey.split(":");
-                for (int i = 0; i < partitionColumns.size(); i++) {
-                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+                try {
+                    for (int i = 0; i < partitionColumns.size(); i++) {
+                        jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+                    }
+                } catch (Exception ex) {
+                    logger.info("===================Error in clustering columns==============");
+                    logger.error("ERROR", ex.getMessage(), ex);
                 }
                 //jsonRow.put("raw_ts", clusteringKey);
                 Row row = partition.getRow(clustering);
@@ -81,6 +91,7 @@ public class TriggerThread implements Callable<Object> {
             }
         }
         String value = rows.toString();
+        logger.info("============================" + value);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
