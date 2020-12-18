@@ -9,6 +9,8 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -18,13 +20,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
-
     private static boolean isKafkaAlive = true;
     private static Logger logger;
     private static Producer<String, String> producer;
-    private ThreadPoolExecutor threadPoolExecutor;
     private static AdminClient client;
     private static Timer timer = new Timer();
+    private ThreadPoolExecutor threadPoolExecutor;
     private String topic;
 
     /**
@@ -32,10 +33,12 @@ public class Trigger implements ITrigger {
      */
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
-        topic = "trigger";
-        producer = new KafkaProducer<String, String>(getProps());
+        //topic = "trigger";
+        Properties properties = getProps();
+        topic = properties.getProperty("topic");
+        producer = new KafkaProducer<String, String>(properties);
         logger = LoggerFactory.getLogger(Trigger.class);
-        client = AdminClient.create(getProps());
+        client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
@@ -54,6 +57,43 @@ public class Trigger implements ITrigger {
         return logger;
     }
 
+    /**
+     *
+     */
+    @Override
+    public Collection<Mutation> augment(Partition partition) {
+        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
+        return Collections.emptyList();
+    }
+
+
+    /**
+     * @return
+     */
+//    private Properties getProps() {
+//        Properties properties = new Properties();
+//        properties.put("bootstrap.servers", "10.105.22.175:9092");
+//        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+//        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+//        properties.put("max.block.ms", "15000"); //Time for which the producer will block on send() method
+//        //properties.put("reconnect.backoff.ms", "1800000"); // Producer reconnect time to delay frequent reconnection
+//        //properties.put("request.timeout.ms", "1800000"); //Adminclient reconnect time to delay frequent reconnection
+//        return properties;
+//    }
+    private Properties getProps() {
+        Properties properties = new Properties();
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("max.block.ms", "15000");
+        try (InputStream fis = new FileInputStream("/etc/cassandra/conf/triggers/Trigger.properties")) {
+            properties.load(fis);
+        } catch (Exception e) {
+            logger.info("Unable to find the specified properties file");
+            e.printStackTrace();
+        }
+        return properties;
+    }
+
     // FileWriter block
     /**
      private static void createFileWriter() {
@@ -69,28 +109,5 @@ public class Trigger implements ITrigger {
      }
      }
      */
-
-    /**
-     *
-     */
-    @Override
-    public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
-        return Collections.emptyList();
-    }
-
-    /**
-     * @return
-     */
-    private Properties getProps() {
-        Properties properties = new Properties();
-        properties.put("bootstrap.servers", "10.105.22.175:9092");
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("max.block.ms", "15000"); //Time for which the producer will block on send() method
-        //properties.put("reconnect.backoff.ms", "1800000"); // Producer reconnect time to delay frequent reconnection
-        //properties.put("request.timeout.ms", "1800000"); //Adminclient reconnect time to delay frequent reconnection
-        return properties;
-    }
 
 }

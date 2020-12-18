@@ -40,7 +40,7 @@ public class TriggerThread implements Callable<Object> {
         String key = getKey(partition);
         String[] partitionValues = key.split(":");
         JSONObject partitionColsJson = new JSONObject();
-        //Flattening all the partition Columns
+        //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionColumns.size(); i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
@@ -54,7 +54,7 @@ public class TriggerThread implements Callable<Object> {
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
                 String[] clusteringKeys = clusteringKey.split(",");
-                //Flattening all the clustering Columns
+                //Flattening all the clustering Columns and adding to JSON row object
                 for (int i = 0; i < clusteringColumns.size(); i++) {
                     jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
