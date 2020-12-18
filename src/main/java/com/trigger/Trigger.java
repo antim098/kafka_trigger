@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -80,7 +81,8 @@ public class Trigger implements ITrigger {
         properties.put("max.block.ms", "15000");
         FileReader reader = null;
         try {
-            reader = new FileReader("/etc/cassandra/conf/triggers/Trigger.properties");
+            File file = new File("/etc/cassandra/conf/triggers/Trigger.properties");
+            reader = new FileReader(file);
             properties.load(reader);
             logger.info("===============Properties Loaded==============");
         } catch (FileNotFoundException e) {
