@@ -27,7 +27,7 @@ public class Trigger implements ITrigger {
     private static Producer<String, String> producer;
     private static AdminClient client;
     private static Timer timer = new Timer();
-    //private static Properties properties = new Properties();
+    private static Properties properties = new Properties();
     private ThreadPoolExecutor threadPoolExecutor;
     private String topic;
 
@@ -36,15 +36,15 @@ public class Trigger implements ITrigger {
      */
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
-        topic = "trigger";
+        //topic = "trigger";
         logger.info("===============Calling get properties==============");
-        //getProps();
-        //logger.info(properties.toString());
-        //topic = properties.getProperty("topic");
-        producer = new KafkaProducer<String, String>(getProps());
+        getProps();
+        logger.info(properties.toString());
+        topic = properties.getProperty("topic");
+        producer = new KafkaProducer<String, String>(properties);
         logger.info("===============Producer Created==============");
         //logger = LoggerFactory.getLogger(Trigger.class);
-        client = AdminClient.create(getProps());
+        client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
@@ -65,34 +65,34 @@ public class Trigger implements ITrigger {
     /**
      * @return
      */
-    private Properties getProps() {
-        Properties properties = new Properties();
-        properties.put("bootstrap.servers", "10.105.22.175:9092");
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("max.block.ms", "15000"); //Time for which the producer will block on send() method
-        //properties.put("reconnect.backoff.ms", "1800000"); // Producer reconnect time to delay frequent reconnection
-        //properties.put("request.timeout.ms", "1800000"); //Adminclient reconnect time to delay frequent reconnection
-        return properties;
-    }
-
-//    private static void getProps() {
+//    private Properties getProps() {
+//        Properties properties = new Properties();
+//        properties.put("bootstrap.servers", "10.105.22.175:9092");
 //        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 //        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-//        properties.put("max.block.ms", "15000");
-//        FileReader reader = null;
-//        try {
-//            File file = new File("/etc/cassandra/conf/triggers/Trigger.properties");
-//            reader = new FileReader(file);
-//            properties.load(reader);
-//            logger.info("===============Properties Loaded==============");
-//        } catch (FileNotFoundException e) {
-//            logger.info("===============File Not Found==============");
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+//        properties.put("max.block.ms", "15000"); //Time for which the producer will block on send() method
+//        //properties.put("reconnect.backoff.ms", "1800000"); // Producer reconnect time to delay frequent reconnection
+//        //properties.put("request.timeout.ms", "1800000"); //Adminclient reconnect time to delay frequent reconnection
+//        return properties;
 //    }
+
+    private static void getProps() {
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("max.block.ms", "15000");
+        FileReader reader = null;
+        try {
+            File file = new File("/etc/cassandra/conf/triggers/Trigger.properties");
+            reader = new FileReader(file);
+            properties.load(reader);
+            logger.info("===============Properties Loaded==============");
+        } catch (FileNotFoundException e) {
+            logger.info("===============File Not Found==============");
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      *
