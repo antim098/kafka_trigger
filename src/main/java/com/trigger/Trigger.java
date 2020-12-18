@@ -9,8 +9,9 @@ import org.apache.kafka.clients.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
@@ -34,9 +35,12 @@ public class Trigger implements ITrigger {
     public Trigger() {
         Thread.currentThread().setContextClassLoader(null);
         //topic = "trigger";
+        logger.info("===============Calling get properties==============");
         Properties properties = getProps();
+        logger.info(properties.toString());
         topic = properties.getProperty("topic");
         producer = new KafkaProducer<String, String>(properties);
+        logger.info("===============Producer Created==============");
         logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
@@ -85,10 +89,15 @@ public class Trigger implements ITrigger {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("max.block.ms", "15000");
-        try (InputStream fis = new FileInputStream("/etc/cassandra/conf/triggers/Trigger.properties")) {
-            properties.load(fis);
-        } catch (Exception e) {
-            logger.info("Unable to find the specified properties file");
+        FileReader reader = null;
+        try {
+            reader = new FileReader("/etc/cassandra/conf/triggers/Trigger.properties");
+            properties.load(reader);
+            logger.info("===============Properties Loaded==============");
+        } catch (FileNotFoundException e) {
+            logger.info("===============File Not Found==============");
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return properties;
