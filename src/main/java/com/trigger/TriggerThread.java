@@ -10,6 +10,8 @@ import org.apache.cassandra.db.rows.UnfilteredRowIterator;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,7 +19,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 public class TriggerThread implements Callable<Object> {
-    org.slf4j.Logger logger;
+    private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
@@ -26,7 +28,6 @@ public class TriggerThread implements Callable<Object> {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
-        this.logger = Trigger.getLogger();
     }
 
     @Override
@@ -90,7 +91,7 @@ public class TriggerThread implements Callable<Object> {
         } catch (Exception ex) {
             Trigger.setKafkaStatus(false);
             logger.info("===================Exception while sending record to producer==============");
-            logger.error("ERROR", ex.getMessage(), ex);
+            logger.info(ex.getMessage(), ex);
             //fileWriter.write("\n" + value);
         }
         return null;
