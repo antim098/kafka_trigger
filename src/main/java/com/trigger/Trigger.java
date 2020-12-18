@@ -22,7 +22,7 @@ public class Trigger implements ITrigger {
     private static boolean isKafkaAlive = true;
     private static Logger logger;
     private static Producer<String, String> producer;
-    private static ThreadPoolExecutor threadPoolExecutor;
+    private ThreadPoolExecutor threadPoolExecutor;
     private static AdminClient client;
     private static Timer timer = new Timer();
     private String topic;

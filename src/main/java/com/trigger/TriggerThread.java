@@ -38,11 +38,11 @@ public class TriggerThread implements Callable<Object> {
         List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
         List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
         String key = getKey(partition);
-        String[] partitionKeys = key.split(":");
+        String[] partitionValues = key.split(":");
         JSONObject partitionColsJson = new JSONObject();
         //Flattening all the partition Columns
         for (int i = 0; i < partitionColumns.size(); i++) {
-            partitionColsJson.put(partitionColumns.get(i).toString(), partitionKeys[i]);
+            partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
         List<JSONObject> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
@@ -53,12 +53,11 @@ public class TriggerThread implements Callable<Object> {
                 JSONObject payload = new JSONObject();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
-                String[] clusteringKeys = clusteringKey.split(":");
+                String[] clusteringKeys = clusteringKey.split(",");
                 //Flattening all the clustering Columns
                 for (int i = 0; i < clusteringColumns.size(); i++) {
                     jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
-                //jsonRow.put("raw_ts", clusteringKey);
                 Row row = partition.getRow(clustering);
                 if (isInsert(row)) {
                     if (rowIsDeleted(row)) {
@@ -80,7 +79,6 @@ public class TriggerThread implements Callable<Object> {
             }
         }
         String value = rows.toString();
-        logger.info("============================" + value);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
