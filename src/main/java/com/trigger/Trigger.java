@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Trigger implements ITrigger {
     private static boolean isKafkaAlive = true;
-    private static Logger logger;
+    private static Logger logger = LoggerFactory.getLogger(Trigger.class);
     private static Producer<String, String> producer;
     private static AdminClient client;
     private static Timer timer = new Timer();
@@ -42,11 +42,23 @@ public class Trigger implements ITrigger {
         topic = properties.getProperty("topic");
         producer = new KafkaProducer<String, String>(properties);
         logger.info("===============Producer Created==============");
-        logger = LoggerFactory.getLogger(Trigger.class);
+        //logger = LoggerFactory.getLogger(Trigger.class);
         client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
+    }
+
+    static boolean getKafkaStatus() {
+        return isKafkaAlive;
+    }
+
+    static synchronized void setKafkaStatus(boolean value) {
+        isKafkaAlive = value;
+    }
+
+    static Logger getLogger() {
+        return logger;
     }
 
     /**
@@ -77,18 +89,6 @@ public class Trigger implements ITrigger {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    static boolean getKafkaStatus() {
-        return isKafkaAlive;
-    }
-
-    static synchronized void setKafkaStatus(boolean value) {
-        isKafkaAlive = value;
-    }
-
-    static Logger getLogger() {
-        return logger;
     }
 
     /**
