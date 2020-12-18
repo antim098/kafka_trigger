@@ -34,10 +34,10 @@ public class Trigger implements ITrigger {
      *
      */
     public Trigger() {
-        getProps();
         Thread.currentThread().setContextClassLoader(null);
         //topic = "trigger";
         logger.info("===============Calling get properties==============");
+        getProps();
         logger.info(properties.toString());
         topic = properties.getProperty("topic");
         producer = new KafkaProducer<String, String>(properties);
@@ -74,7 +74,7 @@ public class Trigger implements ITrigger {
 //        //properties.put("request.timeout.ms", "1800000"); //Adminclient reconnect time to delay frequent reconnection
 //        return properties;
 //    }
-    private void getProps() {
+    private static void getProps() {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("max.block.ms", "15000");
