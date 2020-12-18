@@ -31,45 +31,52 @@ public class TriggerThread implements Callable<Object> {
 
     @Override
     public Object call() {
-        String table = partition.metadata().cfName;
-        List<JSONObject> rows = new ArrayList<>();
-        String key = getKey(partition);
-        String[] keys = key.split(":");
-        JSONObject obj = new JSONObject();
-        //obj.put("key", key);
         if (partitionIsDeleted(partition)) {
-            obj.put("partitionDeleted", true);
-        } else {
-            UnfilteredRowIterator it = partition.unfilteredIterator();
-            //List<JSONObject> rows = new ArrayList<>();
-            while (it.hasNext()) {
-                Unfiltered un = it.next();
-                if (un.isRow()) {
-                    JSONObject jsonRow = new JSONObject();
-                    JSONObject payload = new JSONObject();
-                    Clustering clustering = (Clustering) un.clustering();
-                    String clusteringKey = clustering.toCQLString(partition.metadata());
-                    jsonRow.put("raw_ts", clusteringKey);
-                    Row row = partition.getRow(clustering);
-                    if (isInsert(row)) {
-                        if (rowIsDeleted(row)) {
-                            jsonRow.put("rowDeleted", true);
-                        } else {
-                            Iterator<Cell> cells = row.cells().iterator();
-                            Iterator<ColumnDefinition> columns = row.columns().iterator();
-                            while (cells.hasNext() && columns.hasNext()) {
-                                ColumnDefinition columnDef = columns.next();
-                                Cell cell = cells.next();
-                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                            }
-                            jsonRow.put("table", table);
-                            jsonRow.put("ds", keys[0]);
-                            jsonRow.put("fallout_name", keys[1]);
-                            jsonRow.put("reason", keys[2]);
+            return null;
+        }
+        String tableName = partition.metadata().cfName;
+        List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
+        List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
+        String key = getKey(partition);
+        String[] partitionKeys = key.split(":");
+        JSONObject partitionColsJson = new JSONObject();
+        for (int i = 0; i < partitionColumns.size(); i++) {
+            partitionColsJson.put(partitionColumns.get(i).toString(), partitionKeys[i]);
+        }
+        List<JSONObject> rows = new ArrayList<>();
+        UnfilteredRowIterator it = partition.unfilteredIterator();
+        while (it.hasNext()) {
+            Unfiltered un = it.next();
+            if (un.isRow()) {
+                JSONObject jsonRow = new JSONObject();
+                JSONObject payload = new JSONObject();
+                Clustering clustering = (Clustering) un.clustering();
+                String clusteringKey = clustering.toCQLString(partition.metadata());
+                String[] clusteringKeys = clusteringKey.split(":");
+                for (int i = 0; i < partitionColumns.size(); i++) {
+                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+                }
+                //jsonRow.put("raw_ts", clusteringKey);
+                Row row = partition.getRow(clustering);
+                if (isInsert(row)) {
+                    if (rowIsDeleted(row)) {
+                        jsonRow.put("rowDeleted", true);
+                    } else {
+                        Iterator<Cell> cells = row.cells().iterator();
+                        Iterator<ColumnDefinition> columns = row.columns().iterator();
+                        while (cells.hasNext() && columns.hasNext()) {
+                            ColumnDefinition columnDef = columns.next();
+                            Cell cell = cells.next();
+                            jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
                         }
-                        payload.put("payload", jsonRow);
-                        rows.add(payload);
+                        jsonRow.put("table", tableName);
+                        jsonRow.putAll(partitionColsJson);
+//                            jsonRow.put("ds", keys[0]);
+//                            jsonRow.put("fallout_name", keys[1]);
+//                            jsonRow.put("reason", keys[2]);
                     }
+                    payload.put("payload", jsonRow);
+                    rows.add(payload);
                 }
             }
         }

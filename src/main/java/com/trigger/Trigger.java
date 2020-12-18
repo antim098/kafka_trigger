@@ -39,7 +39,6 @@ public class Trigger implements ITrigger {
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
-
     }
 
     static boolean getKafkaStatus() {
