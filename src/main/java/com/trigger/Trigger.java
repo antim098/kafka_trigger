@@ -37,6 +37,8 @@ public class Trigger implements ITrigger {
         Thread.currentThread().setContextClassLoader(null);
         getProps();
         topic = properties.getProperty("topic");
+        logger.info("===============Properties==============", properties);
+        logger.info("======topic=====", topic);
         producer = new KafkaProducer<String, String>(properties);
         client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
