@@ -37,7 +37,6 @@ public class KafkaTrigger implements ITrigger {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("bootstrap.servers", "10.105.22.175:9092");
-        properties.put("linger.ms","1000");
         properties.put("client.id","Cassandra-Trigger-Producer");
         producer = new KafkaProducer<>(properties);
         threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
