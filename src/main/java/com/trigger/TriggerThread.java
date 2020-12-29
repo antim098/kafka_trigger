@@ -13,6 +13,9 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,11 +26,13 @@ public class TriggerThread implements Callable<Object> {
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
+    private BufferedWriter fileWriter;
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic, BufferedWriter writer) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
+        this.fileWriter = writer;
     }
 
     @Override
@@ -80,16 +85,22 @@ public class TriggerThread implements Callable<Object> {
             }
         }
         String value = rows.toString();
-        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
+        //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
-                producer.send(record);
-                producer.flush();
+                fileWriter.write("\n" + value);
+                //producer.send(record);
+                //producer.flush();
             } else {
                 //Sending records to file in case kafka is down.
                 //fileWriter.write("\n" + value);
             }
         } catch (Exception ex) {
+            try {
+                fileWriter.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Trigger.setKafkaStatus(false);
             logger.info("===================Exception while sending record to producer==============");
             logger.info(ex.getMessage(), ex);
