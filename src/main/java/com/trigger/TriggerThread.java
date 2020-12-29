@@ -27,11 +27,10 @@ public class TriggerThread implements Callable<Object> {
     private String topic;
     private Properties properties = new Properties();
 
-    public TriggerThread(Properties properties, Partition partition, String topic) {
-        //this.producer = producer;
+    public TriggerThread(Producer<String,String> producer, Partition partition, String topic) {
+        this.producer = producer;
         this.partition = partition;
         this.topic = topic;
-        this.properties = properties;
     }
 
     @Override
@@ -84,7 +83,6 @@ public class TriggerThread implements Callable<Object> {
             }
         }
         String value = rows.toString();
-        Producer<String, String> producer = new KafkaProducer<String, String>(properties);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
