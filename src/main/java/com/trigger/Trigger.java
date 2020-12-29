@@ -42,7 +42,7 @@ public class Trigger implements ITrigger {
         producer = new KafkaProducer<String, String>(properties);
         client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
-        threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
+        threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,
                 TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>());
     }
 
