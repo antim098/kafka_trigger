@@ -86,6 +86,7 @@ public class TriggerThread implements Callable<Object> {
                 //fileWriter.write("\n" + value);
                 producer.send(record);
                 producer.close();
+
                 //producer.flush();
             } else {
                 //Sending records to file in case kafka is down.
