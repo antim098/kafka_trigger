@@ -99,7 +99,7 @@ public class TriggerThread implements Callable<Object> {
             try {
                 fileWriter.flush();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.info(e.getMessage(), e);
             }
             Trigger.setKafkaStatus(false);
             logger.info("===================Exception while sending record to producer==============");
