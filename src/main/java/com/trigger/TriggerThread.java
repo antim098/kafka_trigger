@@ -21,11 +21,11 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 
 public class TriggerThread implements Callable<Object> {
-    private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
+    //private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
-    private Properties properties = new Properties();
+    //private Properties properties = new Properties();
 
     public TriggerThread(Producer<String,String> producer, Partition partition, String topic) {
         this.producer = producer;
@@ -82,23 +82,23 @@ public class TriggerThread implements Callable<Object> {
                 }
             }
         }
-        String value = rows.toString();
-        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
-        try {
-            if (Trigger.getKafkaStatus()) {
-                //fileWriter.write("\n" + value);
-                //producer.send(record);
-                //producer.flush();
-            } else {
-                //Sending records to file in case kafka is down.
-                //fileWriter.write("\n" + value);
-            }
-        } catch (Exception ex) {
-            Trigger.setKafkaStatus(false);
-            logger.info("===================Exception while sending record to producer==============");
-            logger.info(ex.getMessage(), ex);
-            //fileWriter.write("\n" + value);
-        }
+//        String value = rows.toString();
+//        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
+//        try {
+//            if (Trigger.getKafkaStatus()) {
+//                //fileWriter.write("\n" + value);
+//                //producer.send(record);
+//                //producer.flush();
+//            } else {
+//                //Sending records to file in case kafka is down.
+//                //fileWriter.write("\n" + value);
+//            }
+//        } catch (Exception ex) {
+//            Trigger.setKafkaStatus(false);
+//            logger.info("===================Exception while sending record to producer==============");
+//            logger.info(ex.getMessage(), ex);
+//            //fileWriter.write("\n" + value);
+//        }
         return null;
     }
 
