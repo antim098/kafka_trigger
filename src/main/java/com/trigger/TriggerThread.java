@@ -7,7 +7,6 @@ import org.apache.cassandra.db.rows.Cell;
 import org.apache.cassandra.db.rows.Row;
 import org.apache.cassandra.db.rows.Unfiltered;
 import org.apache.cassandra.db.rows.UnfilteredRowIterator;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
@@ -17,17 +16,16 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.Callable;
 
 public class TriggerThread implements Callable<Object> {
-    //private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
+    private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
     //private Properties properties = new Properties();
 
-    public TriggerThread(Producer<String,String> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
@@ -82,23 +80,24 @@ public class TriggerThread implements Callable<Object> {
                 }
             }
         }
-//        String value = rows.toString();
-//        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
-//        try {
-//            if (Trigger.getKafkaStatus()) {
-//                //fileWriter.write("\n" + value);
-//                //producer.send(record);
-//                //producer.flush();
+        //String value = rows.toString();
+        //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
+        try {
+            if (Trigger.getKafkaStatus()) {
+                //fileWriter.write("\n" + value);
+                producer.send(new ProducerRecord<String, String>(topic, key, rows.toString()));
+                //producer.flush();
 //            } else {
 //                //Sending records to file in case kafka is down.
 //                //fileWriter.write("\n" + value);
 //            }
-//        } catch (Exception ex) {
-//            Trigger.setKafkaStatus(false);
-//            logger.info("===================Exception while sending record to producer==============");
-//            logger.info(ex.getMessage(), ex);
-//            //fileWriter.write("\n" + value);
-//        }
+            }
+        } catch (Exception ex) {
+            Trigger.setKafkaStatus(false);
+            logger.info("===================Exception while sending record to producer==============");
+            logger.info(ex.getMessage(), ex);
+            //fileWriter.write("\n" + value);
+        }
         return null;
     }
 
