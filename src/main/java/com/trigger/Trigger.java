@@ -26,7 +26,7 @@ public class Trigger implements ITrigger {
     private static Timer timer = new Timer();
     private static Properties properties = new Properties();
     private static AdminClient client;
-    private Producer<String, String> producer;
+    //private Producer<String, String> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private String topic;
 
@@ -39,7 +39,7 @@ public class Trigger implements ITrigger {
         topic = properties.getProperty("topic");
         logger.info("===============Properties============== " + properties);
         logger.info("======topic===== " + topic);
-        producer = new KafkaProducer<String, String>(properties);
+        //producer = new KafkaProducer<String, String>(properties);
         client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30,
@@ -58,7 +58,7 @@ public class Trigger implements ITrigger {
     private static void getProps() {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("max.block.ms", "10000");
+        properties.put("max.block.ms", "1000");
         properties.put("client.id","Cassandra-Trigger-Producer");
         FileReader reader = null;
         try {
@@ -77,7 +77,7 @@ public class Trigger implements ITrigger {
      */
     @Override
     public Collection<Mutation> augment(Partition partition) {
-        threadPoolExecutor.submit(new TriggerThread(producer, partition, topic));
+        threadPoolExecutor.submit(new TriggerThread(properties, partition, topic));
         return Collections.emptyList();
     }
 

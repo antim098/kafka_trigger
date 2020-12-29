@@ -7,6 +7,7 @@ import org.apache.cassandra.db.rows.Cell;
 import org.apache.cassandra.db.rows.Row;
 import org.apache.cassandra.db.rows.Unfiltered;
 import org.apache.cassandra.db.rows.UnfilteredRowIterator;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
 public class TriggerThread implements Callable<Object> {
@@ -23,11 +25,13 @@ public class TriggerThread implements Callable<Object> {
     private Partition partition;
     private Producer<String, String> producer;
     private String topic;
+    private Properties properties = new Properties();
 
-    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
-        this.producer = producer;
+    public TriggerThread(Properties properties, Partition partition, String topic) {
+        //this.producer = producer;
         this.partition = partition;
         this.topic = topic;
+        this.properties = properties;
     }
 
     @Override
@@ -80,13 +84,12 @@ public class TriggerThread implements Callable<Object> {
             }
         }
         String value = rows.toString();
+        Producer<String, String> producer = new KafkaProducer<String, String>(properties);
         ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
                 //fileWriter.write("\n" + value);
                 producer.send(record);
-                producer.close();
-
                 //producer.flush();
             } else {
                 //Sending records to file in case kafka is down.
