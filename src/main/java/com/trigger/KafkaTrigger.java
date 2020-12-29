@@ -32,13 +32,13 @@ public class KafkaTrigger implements ITrigger {
     private final Properties properties = new Properties();
 
     public KafkaTrigger() {
-        //Map<String, Object> configuration = loadConfiguration();
+        Thread.currentThread().setContextClassLoader(null);
         topic = "testing";
-        //StringSerializer keySerializer = getSerializer(configuration, true);
-        //StringSerializer valueSerializer = getSerializer(configuration, false);
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         properties.put("bootstrap.servers", "10.105.22.175:9092");
+        properties.put("linger.ms","1000");
+        properties.put("client.id","Cassandra-Trigger-Producer");
         producer = new KafkaProducer<>(properties);
         threadPoolExecutor = new ThreadPoolExecutor(1, 5, 30, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
     }
@@ -115,9 +115,9 @@ public class KafkaTrigger implements ITrigger {
             }
             obj.put("rows", rows);
         }
-        String value = obj.toJSONString();
-        ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-        producer.send(record);
+        //String value = obj.toJSONString();
+        //ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
+        //producer.send(record);
     }
 
     private boolean partitionIsDeleted(Partition partition) {
