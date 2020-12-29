@@ -84,6 +84,7 @@ public class TriggerThread implements Callable<Object> {
         try {
             if (Trigger.getKafkaStatus()) {
                 producer.send(record);
+                producer.flush();
             } else {
                 //Sending records to file in case kafka is down.
                 //fileWriter.write("\n" + value);
