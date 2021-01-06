@@ -59,8 +59,8 @@ public class Trigger implements ITrigger {
 
     private static void getProps() {
         properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        //properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer","org.apache.kafka.common.serialization.ByteArraySerializer");
+        properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        //properties.put("value.serializer","org.apache.kafka.common.serialization.ByteArraySerializer");
         properties.put("max.block.ms", "10000");
         properties.put("client.id", "Cassandra-Trigger-Producer");
         FileReader reader = null;
