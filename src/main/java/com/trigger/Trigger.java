@@ -26,8 +26,8 @@ public class Trigger implements ITrigger {
     private static Timer timer = new Timer();
     private static Properties properties = new Properties();
     private static AdminClient client;
-    //private Producer<String, String> producer;
-    private Producer<String, byte[]> producer;
+    private Producer<String, String> producer;
+    //private Producer<String, byte[]> producer;
     private ThreadPoolExecutor threadPoolExecutor;
     private String topic;
 
@@ -40,8 +40,8 @@ public class Trigger implements ITrigger {
         topic = properties.getProperty("topic");
         logger.info("===============Properties============== " + properties);
         logger.info("======topic===== " + topic);
-        //producer = new KafkaProducer<String, String>(properties);
-        producer = new org.apache.kafka.clients.producer.KafkaProducer<String,byte[]>(properties);
+        producer = new KafkaProducer<String, String>(properties);
+        //producer = new org.apache.kafka.clients.producer.KafkaProducer<String,byte[]>(properties);
         client = AdminClient.create(properties);
         timer.schedule(new KafkaConnectionListener(client), 0, 60000);
         threadPoolExecutor = new ThreadPoolExecutor(1, 1, 30,

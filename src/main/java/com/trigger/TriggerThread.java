@@ -25,12 +25,11 @@ import java.util.zip.GZIPOutputStream;
 public class TriggerThread implements Callable<Object> {
     private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
-    //private Producer<String, String> producer;
-    private Producer<String, byte[]> producer;
+    private Producer<String, String> producer;
     private String topic;
     //private Properties properties = new Properties();
 
-    public TriggerThread(Producer<String, byte[]> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
@@ -88,17 +87,21 @@ public class TriggerThread implements Callable<Object> {
                 }
             }
         }
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        GZIPOutputStream gzip = null;
-        byte[] row = new byte[0];
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         try {
-            gzip = new GZIPOutputStream(out);
-            gzip.write(rows.toString().getBytes());
-            gzip.close();
+            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
+            gzipOutputStream.write(rows.toString().getBytes());
             rows.clear();
-            row = out.toByteArray();
+            gzipOutputStream.close();
+            gzipOutputStream.finish();
         } catch (IOException e) {
-            logger.info("Error in compression");
+            logger.info("Error while compressing");
+        }
+        String row = byteArrayOutputStream.toString();
+        try {
+            byteArrayOutputStream.close();
+        } catch (IOException e) {
+            logger.info("Error while closing array output stream");
         }
 
         //String value = rows.toString();
