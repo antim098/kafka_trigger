@@ -1,5 +1,7 @@
 package com.trigger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.cassandra.config.ColumnDefinition;
 import org.apache.cassandra.db.Clustering;
 import org.apache.cassandra.db.partitions.Partition;
@@ -22,11 +24,12 @@ public class TriggerThread implements Callable<Object> {
     private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
     //private Producer<String, String> producer;
-    private Producer<String, JSONObject> producer;
+    private Producer<String, String> producer;
     private String topic;
+    public static final ObjectMapper MAPPER = new ObjectMapper();
     //private Properties properties = new Properties();
 
-    public TriggerThread(Producer<String, JSONObject> producer, Partition partition, String topic) {
+    public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
         this.partition = partition;
         this.topic = topic;
@@ -43,21 +46,24 @@ public class TriggerThread implements Callable<Object> {
         List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
         String key = getKey(partition);
         String[] partitionValues = key.split(":");
-        JSONObject partitionColsJson = new JSONObject();
+        //JSONObject partitionColsJson = new JSONObject();
+        ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionColumns.size(); i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
-        List<JSONObject> rows = new ArrayList<>();
+        //List<JSONObject> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //StringBuilder str = new StringBuilder();
-        JSONObject payload = new JSONObject();
+        //JSONObject payload = new JSONObject();
+        ObjectNode payload = MAPPER.createObjectNode();
         while (it.hasNext()) {
             Unfiltered un = it.next();
             if (un.isRow()) {
                 //str.append(un.toString(partition.metadata()));
                 //str.append(partitionColsJson.toJSONString());
-                JSONObject jsonRow = new JSONObject();
+                //JSONObject jsonRow = new JSONObject();
+                ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
                 String[] clusteringKeys = clusteringKey.split(",");
@@ -82,6 +88,7 @@ public class TriggerThread implements Callable<Object> {
                         }
                         jsonRow.put("table", tableName);
                         jsonRow.putAll(partitionColsJson);
+                        //jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
                     //rows.add(payload);
@@ -109,7 +116,7 @@ public class TriggerThread implements Callable<Object> {
         //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
-                //producer.send(new ProducerRecord<String, JSONObject>(topic, key, payload));
+                producer.send(new ProducerRecord<String, String>(topic, key, payload.toString()));
                 //producer.send(new ProducerRecord<>(topic, key, str.toString()));
                 //fileWriter.write("\n" + value);
                 //producer.send(new ProducerRecord<String, String>(topic, key, "[{\"payload\":{\"raw_ts\":\"87c5402b-2e4e-11eb-907d-8bc5adaa2362\",\"fallout_name\":\"domino_deleted_chassis_module_raw\",\"reason\":\"Invalid DELETED_DTS\",\"loadtime\":\"2020-12-21 23:19:37.006000+0000\",\"record_info_map\":\"{'chassis_id': '14252', 'deleted_dts': '2020-09-30 15:09:45.663', 'module_id': '29'}\",\"table\":\"etl_fallout_trigger\",\"ds\":\"20200930\"}}]"));
