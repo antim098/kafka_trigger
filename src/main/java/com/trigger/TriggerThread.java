@@ -52,7 +52,7 @@ public class TriggerThread implements Callable<Object> {
         for (int i = 0; i < partitionColumns.size(); i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
-        //List<JSONObject> rows = new ArrayList<>();
+        List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //StringBuilder str = new StringBuilder();
         //JSONObject payload = new JSONObject();
@@ -91,7 +91,7 @@ public class TriggerThread implements Callable<Object> {
                         //jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
-                    //rows.add(payload);
+                    rows.add(payload);
                 }
             }
         }
@@ -116,7 +116,7 @@ public class TriggerThread implements Callable<Object> {
         //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
-                producer.send(new ProducerRecord<String, String>(topic, key, payload.toString()));
+                producer.send(new ProducerRecord<String, String>(topic, key, rows.toString()));
                 //producer.send(new ProducerRecord<>(topic, key, str.toString()));
                 //fileWriter.write("\n" + value);
                 //producer.send(new ProducerRecord<String, String>(topic, key, "[{\"payload\":{\"raw_ts\":\"87c5402b-2e4e-11eb-907d-8bc5adaa2362\",\"fallout_name\":\"domino_deleted_chassis_module_raw\",\"reason\":\"Invalid DELETED_DTS\",\"loadtime\":\"2020-12-21 23:19:37.006000+0000\",\"record_info_map\":\"{'chassis_id': '14252', 'deleted_dts': '2020-09-30 15:09:45.663', 'module_id': '29'}\",\"table\":\"etl_fallout_trigger\",\"ds\":\"20200930\"}}]"));
