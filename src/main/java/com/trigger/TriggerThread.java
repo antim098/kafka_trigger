@@ -11,7 +11,6 @@ import org.apache.cassandra.db.rows.Unfiltered;
 import org.apache.cassandra.db.rows.UnfilteredRowIterator;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +20,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 public class TriggerThread implements Callable<Object> {
+    public static final ObjectMapper MAPPER = new ObjectMapper();
     private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
     //private Producer<String, String> producer;
     private Producer<String, String> producer;
     private String topic;
-    public static final ObjectMapper MAPPER = new ObjectMapper();
     //private Properties properties = new Properties();
 
     public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
@@ -54,45 +53,48 @@ public class TriggerThread implements Callable<Object> {
         }
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
-        StringBuilder str = new StringBuilder();
+        //StringBuilder str = new StringBuilder();
         //JSONObject payload = new JSONObject();
         ObjectNode payload = MAPPER.createObjectNode();
         while (it.hasNext()) {
             Unfiltered un = it.next();
             if (un.isRow()) {
-                str.append(un.toString(partition.metadata()));
-                str.append(partitionColsJson.toString());
-//                //JSONObject jsonRow = new JSONObject();
-//                ObjectNode jsonRow = MAPPER.createObjectNode();
-//                Clustering clustering = (Clustering) un.clustering();
-//                String clusteringKey = clustering.toCQLString(partition.metadata());
-//                String[] clusteringKeys = clusteringKey.split(",");
-//                //Flattening all the clustering Columns and adding to JSON row object
-//                for (int i = 0; i < clusteringColumns.size(); i++) {
-//                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
-//                }
-//                Row row = partition.getRow(clustering);
-//                if (isInsert(row)) {
-//                    if (rowIsDeleted(row)) {
-//                        jsonRow.put("rowDeleted", true);
-//                    } else {
-//                        Iterator<Cell> cells = row.cells().iterator();
-//                        Iterator<ColumnDefinition> columns = row.columns().iterator();
-//                        while (cells.hasNext() && columns.hasNext()) {
-//                            ColumnDefinition columnDef = columns.next();
-//                            Cell cell = cells.next();
-//                            jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-////                            if (colNames.contains(columnDef.name.toString())) {
-////                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-////                            }
-//                        }
-//                        jsonRow.put("table", tableName);
-//                        jsonRow.putAll(partitionColsJson);
-//                        //jsonRow.putAll(partitionColsJson);
-//                    }
-//                    payload.put("payload", jsonRow);
-//                    rows.add(payload);
-//                }
+                //str.append(un.toString(partition.metadata()));
+                //str.append(partitionColsJson.toString());
+                //JSONObject jsonRow = new JSONObject();
+                ObjectNode jsonRow = MAPPER.createObjectNode();
+                Clustering clustering = (Clustering) un.clustering();
+                String clusteringKey = clustering.toCQLString(partition.metadata());
+                String[] clusteringKeys = clusteringKey.split(",");
+                //Flattening all the clustering Columns and adding to JSON row object
+                for (int i = 0; i < clusteringColumns.size(); i++) {
+                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+                }
+                Row row = partition.getRow(clustering);
+                if (isInsert(row)) {
+                    if (rowIsDeleted(row)) {
+                        jsonRow.put("rowDeleted", true);
+                    } else {
+                        Iterator<Cell> cells = row.cells().iterator();
+                        Iterator<ColumnDefinition> columns = row.columns().iterator();
+                        while (cells.hasNext() && columns.hasNext()) {
+                            ColumnDefinition columnDef = columns.next();
+                            Cell cell = cells.next();
+                            String value = columnDef.type.getString(cell.value()).trim();
+                            if (!value.equals("NULL") && !value.equals("")) {
+                                jsonRow.put(columnDef.name.toString(), value);
+                            }
+//                            if (colNames.contains(columnDef.name.toString())) {
+//                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+//                            }
+                        }
+                        jsonRow.put("table", tableName);
+                        jsonRow.putAll(partitionColsJson);
+                        //jsonRow.putAll(partitionColsJson);
+                    }
+                    payload.put("payload", jsonRow);
+                    rows.add(payload);
+                }
             }
         }
 //        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -116,7 +118,7 @@ public class TriggerThread implements Callable<Object> {
         //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
-                producer.send(new ProducerRecord<String, String>(topic, key, str.toString()));
+                producer.send(new ProducerRecord<String, String>(topic, key, rows.toString()));
                 //producer.send(new ProducerRecord<>(topic, key, str.toString()));
                 //fileWriter.write("\n" + value);
                 //producer.send(new ProducerRecord<String, String>(topic, key, "[{\"payload\":{\"raw_ts\":\"87c5402b-2e4e-11eb-907d-8bc5adaa2362\",\"fallout_name\":\"domino_deleted_chassis_module_raw\",\"reason\":\"Invalid DELETED_DTS\",\"loadtime\":\"2020-12-21 23:19:37.006000+0000\",\"record_info_map\":\"{'chassis_id': '14252', 'deleted_dts': '2020-09-30 15:09:45.663', 'module_id': '29'}\",\"table\":\"etl_fallout_trigger\",\"ds\":\"20200930\"}}]"));
