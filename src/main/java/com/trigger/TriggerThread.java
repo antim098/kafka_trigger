@@ -75,9 +75,10 @@ public class TriggerThread implements Callable<Object> {
                     if (rowIsDeleted(row)) {
                         jsonRow.put("rowDeleted", true);
                     } else {
+                        int counter = 0;
                         Iterator<Cell> cells = row.cells().iterator();
                         Iterator<ColumnDefinition> columns = row.columns().iterator();
-                        while (cells.hasNext() && columns.hasNext()) {
+                        while (cells.hasNext() && columns.hasNext() && counter < 34) {
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
                             String value = columnDef.type.getString(cell.value()).trim();
@@ -87,6 +88,7 @@ public class TriggerThread implements Callable<Object> {
 //                            if (colNames.contains(columnDef.name.toString())) {
 //                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
 //                            }
+                            counter++;
                         }
                         jsonRow.put("table", tableName);
                         jsonRow.putAll(partitionColsJson);
