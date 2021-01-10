@@ -14,7 +14,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -51,7 +50,9 @@ public class TriggerThread implements Callable<Object> {
         for (int i = 0; i < partitionColumns.size(); i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
-        List<ObjectNode> rows = new ArrayList<>();
+        //List<ObjectNode> rows = new ArrayList<>();
+        StringBuilder rows = new StringBuilder();
+        rows.append("[");
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //StringBuilder str = new StringBuilder();
         //JSONObject payload = new JSONObject();
@@ -75,10 +76,10 @@ public class TriggerThread implements Callable<Object> {
                     if (rowIsDeleted(row)) {
                         jsonRow.put("rowDeleted", true);
                     } else {
-                        int counter = 0;
+                        //int counter = 0;
                         Iterator<Cell> cells = row.cells().iterator();
                         Iterator<ColumnDefinition> columns = row.columns().iterator();
-                        while (cells.hasNext() && columns.hasNext() && counter < 34) {
+                        while (cells.hasNext() && columns.hasNext()) {
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
                             String value = columnDef.type.getString(cell.value()).trim();
@@ -88,17 +89,22 @@ public class TriggerThread implements Callable<Object> {
 //                            if (colNames.contains(columnDef.name.toString())) {
 //                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
 //                            }
-                            counter++;
+                            //counter++;
                         }
                         jsonRow.put("table", tableName);
                         jsonRow.putAll(partitionColsJson);
                         //jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
-                    rows.add(payload);
+                    if (rows.toString().length() > 1) rows.append("," + jsonRow.toString());
+                    else {
+                        rows.append(jsonRow.toString());
+                    }
+                    //rows.add(payload);
                 }
             }
         }
+        rows.append("]");
 //        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 //        try {
 //            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
