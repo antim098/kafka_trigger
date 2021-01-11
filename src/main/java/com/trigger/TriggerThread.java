@@ -96,9 +96,9 @@ public class TriggerThread implements Callable<Object> {
                         //jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
-                    if (rows.toString().length() > 1) rows.append("," + jsonRow.toString());
+                    if (rows.toString().length() > 1) rows.append("," + payload.toString());
                     else {
-                        rows.append(jsonRow.toString());
+                        rows.append(payload.toString());
                     }
                     //rows.add(payload);
                 }
