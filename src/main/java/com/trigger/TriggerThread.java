@@ -83,10 +83,11 @@ public class TriggerThread implements Callable<Object> {
                         while (cells.hasNext() && columns.hasNext()) {
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
-                            String value = columnDef.type.getString(cell.value()).trim();
-                            if (!value.equals("NULL") && !value.equals("")) {
-                                jsonRow.put(columnDef.name.toString(), value);
-                            }
+                            jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+                            //String value = columnDef.type.getString(cell.value()).trim();
+//                            if (!value.equals("NULL") && !value.equals("")) {
+//                                jsonRow.put(columnDef.name.toString(), value);
+//                            }
 //                            if (colNames.contains(columnDef.name.toString())) {
 //                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
 //                            }
@@ -101,23 +102,6 @@ public class TriggerThread implements Callable<Object> {
             }
         }
         //rows.append("]");
-//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//        try {
-//            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
-//            gzipOutputStream.write(rows.toString().getBytes());
-//            rows.clear();
-//            gzipOutputStream.close();
-//            gzipOutputStream.finish();
-//        } catch (IOException e) {
-//            logger.info("Error while compressing");
-//        }
-//        String row = byteArrayOutputStream.toString();
-//        try {
-//            byteArrayOutputStream.close();
-//        } catch (IOException e) {
-//            logger.info("Error while closing array output stream");
-//        }
-
         //String value = rows.toString();
         //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
