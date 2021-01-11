@@ -14,6 +14,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -50,9 +51,9 @@ public class TriggerThread implements Callable<Object> {
         for (int i = 0; i < partitionColumns.size(); i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
-        //List<ObjectNode> rows = new ArrayList<>();
-        StringBuilder rows = new StringBuilder();
-        rows.append("[");
+        List<ObjectNode> rows = new ArrayList<>();
+        //StringBuilder rows = new StringBuilder();
+        //rows.append("[");
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //StringBuilder str = new StringBuilder();
         //JSONObject payload = new JSONObject();
@@ -93,18 +94,13 @@ public class TriggerThread implements Callable<Object> {
                         }
                         jsonRow.put("table", tableName);
                         jsonRow.putAll(partitionColsJson);
-                        //jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
-                    if (rows.toString().length() > 1) rows.append("," + payload.toString());
-                    else {
-                        rows.append(payload.toString());
-                    }
-                    //rows.add(payload);
+                    rows.add(payload);
                 }
             }
         }
-        rows.append("]");
+        //rows.append("]");
 //        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 //        try {
 //            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
