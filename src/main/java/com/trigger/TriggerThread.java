@@ -83,11 +83,11 @@ public class TriggerThread implements Callable<Object> {
                         while (cells.hasNext() && columns.hasNext()) {
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
-                            jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                            //String value = columnDef.type.getString(cell.value()).trim();
-//                            if (!value.equals("NULL") && !value.equals("")) {
-//                                jsonRow.put(columnDef.name.toString(), value);
-//                            }
+                            //jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
+                            String value = columnDef.type.getString(cell.value()).trim();
+                            if (!value.equals("NULL") && !value.equals("")) {
+                                jsonRow.put(columnDef.name.toString(), value);
+                            }
 //                            if (colNames.contains(columnDef.name.toString())) {
 //                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
 //                            }

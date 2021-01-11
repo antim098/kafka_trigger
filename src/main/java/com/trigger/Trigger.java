@@ -6,8 +6,6 @@ import org.apache.cassandra.triggers.ITrigger;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,24 +84,31 @@ public class Trigger implements ITrigger {
     }
 
     // FileWriter block
-    /**
-     private static void createFileWriter() {
-     if (fileWriter == null) {
-     File file = new File("/etc/cassandra/conf/triggers/data.txt");
-     try {
-     if (!file.exists()) file.createNewFile();
-     fileWriter = new BufferedWriter(new FileWriter(file, true));
-     } catch (IOException e) {
-     logger.info("============Error while creating writer========");
-     logger.error("ERROR", e.getMessage(), e);
-     }
-     }
-     }
-     */
 
     /**
-     * @return
+     * private static void createFileWriter() {
+     * if (fileWriter == null) {
+     * File file = new File("/etc/cassandra/conf/triggers/data.txt");
+     * try {
+     * if (!file.exists()) file.createNewFile();
+     * fileWriter = new BufferedWriter(new FileWriter(file, true));
+     * } catch (IOException e) {
+     * logger.info("============Error while creating writer========");
+     * logger.error("ERROR", e.getMessage(), e);
+     * }
+     * }
+     * }
      */
+
+//    @Override
+//    // finalize method is called on object once
+//    // before garbage collecting it
+//    protected void finalize() throws Throwable {
+//        logger.info("Object garbage collected : " + this);
+//        logger.info("Terminating associated timer thread");
+//        timer.cancel();
+//
+//    }
 
 
 }
