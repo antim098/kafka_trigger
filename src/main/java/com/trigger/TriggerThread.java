@@ -54,10 +54,10 @@ public class TriggerThread implements Callable<Object> {
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //JSONObject payload = new JSONObject();
-        ObjectNode payload = MAPPER.createObjectNode();
         while (it.hasNext()) {
             Unfiltered un = it.next();
             if (un.isRow()) {
+                ObjectNode payload = MAPPER.createObjectNode();
                 ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
