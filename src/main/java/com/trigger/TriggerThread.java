@@ -19,14 +19,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+/**
+ * TriggerThread Class
+ * Provides custom functionality for handling the incoming data from augment method.
+ */
 public class TriggerThread implements Callable<Object> {
     public static final ObjectMapper MAPPER = new ObjectMapper();
     private static Logger logger = LoggerFactory.getLogger(TriggerThread.class);
     private Partition partition;
-    //private Producer<String, String> producer;
     private Producer<String, String> producer;
     private String topic;
-    //private Properties properties = new Properties();
 
     public TriggerThread(Producer<String, String> producer, Partition partition, String topic) {
         this.producer = producer;
@@ -39,31 +41,23 @@ public class TriggerThread implements Callable<Object> {
         if (partitionIsDeleted(partition)) {
             return null;
         }
-        //ArrayList<String> colNames = new ArrayList<>(Arrays.asList("create_uid", "create_dts", "item_short_name", "jobid", "update_uid", "update_dts"));
         String tableName = partition.metadata().cfName;
         List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
         List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
         String key = getKey(partition);
         String[] partitionValues = key.split(":");
-        //JSONObject partitionColsJson = new JSONObject();
         ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionColumns.size(); i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
         List<ObjectNode> rows = new ArrayList<>();
-        //StringBuilder rows = new StringBuilder();
-        //rows.append("[");
         UnfilteredRowIterator it = partition.unfilteredIterator();
-        //StringBuilder str = new StringBuilder();
         //JSONObject payload = new JSONObject();
         ObjectNode payload = MAPPER.createObjectNode();
         while (it.hasNext()) {
             Unfiltered un = it.next();
             if (un.isRow()) {
-                //str.append(un.toString(partition.metadata()));
-                //str.append(partitionColsJson.toString());
-                //JSONObject jsonRow = new JSONObject();
                 ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
@@ -88,10 +82,6 @@ public class TriggerThread implements Callable<Object> {
                             if (!value.equals("NULL") && !value.equals("")) {
                                 jsonRow.put(columnDef.name.toString(), value);
                             }
-//                            if (colNames.contains(columnDef.name.toString())) {
-//                                jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-//                            }
-                            //counter++;
                         }
                         jsonRow.put("table", tableName);
                         jsonRow.putAll(partitionColsJson);
@@ -101,17 +91,9 @@ public class TriggerThread implements Callable<Object> {
                 }
             }
         }
-        //rows.append("]");
-        //String value = rows.toString();
-        //ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
         try {
             if (Trigger.getKafkaStatus()) {
                 producer.send(new ProducerRecord<String, String>(topic, key, rows.toString()));
-                //producer.send(new ProducerRecord<>(topic, key, str.toString()));
-                //fileWriter.write("\n" + value);
-                //producer.send(new ProducerRecord<String, String>(topic, key, "[{\"payload\":{\"raw_ts\":\"87c5402b-2e4e-11eb-907d-8bc5adaa2362\",\"fallout_name\":\"domino_deleted_chassis_module_raw\",\"reason\":\"Invalid DELETED_DTS\",\"loadtime\":\"2020-12-21 23:19:37.006000+0000\",\"record_info_map\":\"{'chassis_id': '14252', 'deleted_dts': '2020-09-30 15:09:45.663', 'module_id': '29'}\",\"table\":\"etl_fallout_trigger\",\"ds\":\"20200930\"}}]"));
-                //producer.send(new ProducerRecord<String, String>(topic, key,"[{\"payload\":{\"create_dts\":\"2017-07-27 12:12:00.457\",\"commodity_code\":\"10000000\",\"sku_requestor_uid\":\"NULL\",\"orderable\":\"1\",\"alt_product_group1_code\":\"NULL\",\"item_class_id\":\"NA000\",\"clave_prod_serv\":\"NULL\",\"hsn_sac_code\":\"NULL\",\"update_dts\":\"2017-08-08 07:55:31.147\",\"ds\":\"20200928\",\"sku_source_code\":\"NULL\",\"item_weight\":\"0.000\",\"jobid\":\"1607602101804\",\"shippable_flag\":\"0\",\"ship_class\":\"NULL\",\"product_mfg_code\":\"NULL\",\"unspsc_code\":\"NULL\",\"gbwitem_flag\":\"0\",\"item_short_name\":\"CSTMA:FMS(FY18Q2) /PS:TS/ 18 month (61-78 M) / PowerConnect 2816\",\"item_keyword\":\"NULL\",\"manufacturer_id\":\"NULL\",\"dell_mfg_part_number\":\"NULL\",\"emc_origin\":\"0\",\"sku_id\":\"11320110\",\"create_uid\":\"ASIA-PACIFIC\\\\Unik_You\",\"line_item_override_flag\":\"0\",\"si_number\":\"NULL\",\"copy_svc_control_flag\":\"NULL\",\"exception_exists_flag\":\"0\",\"corp_discount_flag\":\"0\",\"china_commodity_code\":\"NULL\",\"line_of_business_code\":\"70\",\"end_of_life_date\":\"NULL\",\"update_uid\":\"BATCH::Unik_You\",\"flexi_sku\":\"0\",\"ready_to_order_date\":\"2017-07-27 11:50:11.000\",\"recurring_bill_flag\":\"0\",\"region\":\"GLOBAL\",\"ndaa_flag\":\"0\",\"product_group_code\":\"NULL\",\"sabrix_tax_code\":\"97520\",\"status_code\":\"D\",\"sku_num\":\"547-37152\",\"parent_qty\":\"3\",\"archived\":\"0\",\"emea_commodity_code\":\"NULL\",\"global_sku\":\"0\",\"vitem_flag\":\"0\",\"sku_owner_uid\":\"NULL\",\"pds_tested\":\"0\",\"item_type_code\":\"8\",\"revenue_code\":\"O3\",\"table\":\"domino_item_raw_wt_p1\",\"sku_type_code\":\"APOSWARR\",\"alt_product_group2_code\":\"NULL\",\"comments\":\"NULL\",\"mwd_flag\":\"0\",\"nbd_flag\":\"NO\",\"manufacturer_name\":\"NULL\",\"item_long_name\":\"CSTMA:FMS(FY18Q2) /PS:TS/ 18 month (61-78 M) / PowerConnect 2816\",\"scm_guid\":\"F80D44B2-C51A-41BA-A839-18D6469A6566\",\"material_number\":\"NULL\",\"charge_shipping_with_sys_flag\":\"0\",\"item_ownership_group_id\":\"1\",\"gedis_class_code\":\"C993\",\"ts\":\"23bbf6f3-3afd-11eb-85d9-91d4c3908712\"}}]"));
-                //producer.flush();
 //            } else {
 //                //Sending records to file in case kafka is down.
 //                //fileWriter.write("\n" + value);
@@ -121,23 +103,40 @@ public class TriggerThread implements Callable<Object> {
             Trigger.setKafkaStatus(false);
             logger.info("===================Exception while sending record to producer==============");
             logger.info(ex.getMessage(), ex);
-            //fileWriter.write("\n" + value);
         }
         return null;
     }
 
+    /** Checks if the row came as an
+     * insert operation based on the liveness info
+     * @param row
+     * @return boolean
+     */
     private boolean isInsert(Row row) {
         return row.primaryKeyLivenessInfo().timestamp() != Long.MIN_VALUE;
     }
 
+    /**
+     * Extracts the partition key from the partition
+     * @param partition
+     * @return partition key string concatenated with : in case of multiple values
+     */
     private String getKey(Partition partition) {
         return partition.metadata().getKeyValidator().getString(partition.partitionKey().getKey());
     }
 
+    /** Checks if the partition was deleted
+     * @param partition
+     * @return boolean
+     */
     private boolean partitionIsDeleted(Partition partition) {
         return partition.partitionLevelDeletion().markedForDeleteAt() > Long.MIN_VALUE;
     }
 
+    /**Checks if the row inside the partition was deleted
+     * @param row
+     * @return boolean
+     */
     private boolean rowIsDeleted(Row row) {
         return row.deletion().time().markedForDeleteAt() > Long.MIN_VALUE;
     }

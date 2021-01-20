@@ -7,6 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.TimerTask;
 
+/** KafkaConnectionListener
+ * Checks if kakfa service is running
+ * Scheduled using timer thread from Trigger class, runs periodically
+ */
 public class KafkaConnectionListener extends TimerTask {
     private AdminClient kafkaAdmin;
     private Logger logger = LoggerFactory.getLogger(KafkaConnectionListener.class);
