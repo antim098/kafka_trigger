@@ -45,12 +45,14 @@ public class TriggerThread implements Callable<Object> {
         List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
         List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
         String key = getKey(partition);
+        logger.info("Partition Key ==" + key);
         String[] partitionValues = key.split(":");
         ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
-        for (int i = 0; i < partitionColumns.size(); i++) {
+        for (int i = 0; i < partitionValues.length; i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
+        logger.info("Partition Key Json  "+ partitionColsJson.toString());
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //JSONObject payload = new JSONObject();
@@ -84,9 +86,11 @@ public class TriggerThread implements Callable<Object> {
                             }
                         }
                         jsonRow.put("table", tableName);
+                        logger.info("Json Row "+ jsonRow.toString());
                         jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
+                    logger.info("Full payload "+ payload.toString());
                     rows.add(payload);
                 }
             }
@@ -107,8 +111,10 @@ public class TriggerThread implements Callable<Object> {
         return null;
     }
 
-    /** Checks if the row came as an
+    /**
+     * Checks if the row came as an
      * insert operation based on the liveness info
+     *
      * @param row
      * @return boolean
      */
@@ -118,6 +124,7 @@ public class TriggerThread implements Callable<Object> {
 
     /**
      * Extracts the partition key from the partition
+     *
      * @param partition
      * @return partition key string concatenated with : in case of multiple values
      */
@@ -125,7 +132,9 @@ public class TriggerThread implements Callable<Object> {
         return partition.metadata().getKeyValidator().getString(partition.partitionKey().getKey());
     }
 
-    /** Checks if the partition was deleted
+    /**
+     * Checks if the partition was deleted
+     *
      * @param partition
      * @return boolean
      */
@@ -133,7 +142,9 @@ public class TriggerThread implements Callable<Object> {
         return partition.partitionLevelDeletion().markedForDeleteAt() > Long.MIN_VALUE;
     }
 
-    /**Checks if the row inside the partition was deleted
+    /**
+     * Checks if the row inside the partition was deleted
+     *
      * @param row
      * @return boolean
      */
