@@ -69,7 +69,7 @@ public class TriggerThread implements Callable<Object> {
                 logger.info(clusteringKeys.toString());
                 //Flattening all the clustering Columns and adding to JSON row object
                 for (int i = 0; i < clusteringKeys.length; i++) {
-                    if (!clusteringKeys[i].equals(""))
+                    if (!clusteringKeys[i].trim().equals(""))
                         jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
                 logger.info("cluster key json "+ jsonRow.toString());
