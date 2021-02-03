@@ -64,12 +64,15 @@ public class TriggerThread implements Callable<Object> {
                 ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
+                logger.info("clusterkey "+clusteringKey);
                 String[] clusteringKeys = clusteringKey.split(",");
+                logger.info(clusteringKeys.toString());
                 //Flattening all the clustering Columns and adding to JSON row object
                 for (int i = 0; i < clusteringKeys.length; i++) {
                     if (!clusteringKeys[i].equals(""))
                         jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
+                logger.info("cluster key json "+ jsonRow.toString());
                 Row row = partition.getRow(clustering);
                 if (isInsert(row)) {
                     if (rowIsDeleted(row)) {
