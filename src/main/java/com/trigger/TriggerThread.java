@@ -50,9 +50,10 @@ public class TriggerThread implements Callable<Object> {
         ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionValues.length; i++) {
-            partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
+            if (!partitionValues[i].equals(""))
+                partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
-        logger.info("Partition Key Json  "+ partitionColsJson.toString());
+        logger.info("Partition Key Json  " + partitionColsJson.toString());
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //JSONObject payload = new JSONObject();
@@ -65,8 +66,9 @@ public class TriggerThread implements Callable<Object> {
                 String clusteringKey = clustering.toCQLString(partition.metadata());
                 String[] clusteringKeys = clusteringKey.split(",");
                 //Flattening all the clustering Columns and adding to JSON row object
-                for (int i = 0; i < clusteringColumns.size(); i++) {
-                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+                for (int i = 0; i < clusteringKeys.length; i++) {
+                    if (!clusteringKeys[i].equals(""))
+                        jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
                 Row row = partition.getRow(clustering);
                 if (isInsert(row)) {
@@ -86,11 +88,11 @@ public class TriggerThread implements Callable<Object> {
                             }
                         }
                         jsonRow.put("table", tableName);
-                        logger.info("Json Row "+ jsonRow.toString());
+                        logger.info("Json Row " + jsonRow.toString());
                         jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
-                    logger.info("Full payload "+ payload.toString());
+                    logger.info("Full payload " + payload.toString());
                     rows.add(payload);
                 }
             }
