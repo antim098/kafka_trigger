@@ -45,13 +45,13 @@ public class TriggerThread implements Callable<Object> {
         List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
         List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
         String key = getKey(partition);
+        //key = 20201205:domino_entity_name:
         logger.info("Partition Key ==" + key);
-        String[] partitionValues = key.split(":");
+        String[] partitionValues = key.split(":", -1);
         ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionValues.length; i++) {
-            if (!partitionValues[i].trim().equals(""))
-                partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
+            partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
         logger.info("Partition Key Json  " + partitionColsJson.toString());
         List<ObjectNode> rows = new ArrayList<>();
@@ -64,15 +64,14 @@ public class TriggerThread implements Callable<Object> {
                 ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
-                logger.info("clusterkey "+clusteringKey);
-                String[] clusteringKeys = clusteringKey.split(",");
+                logger.info("clusterkey " + clusteringKey);
+                String[] clusteringKeys = clusteringKey.split(", ", -1);
                 logger.info(clusteringKeys.toString());
                 //Flattening all the clustering Columns and adding to JSON row object
                 for (int i = 0; i < clusteringKeys.length; i++) {
-                    if (!clusteringKeys[i].trim().equals(""))
-                        jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
-                logger.info("cluster key json "+ jsonRow.toString());
+                logger.info("cluster key json " + jsonRow.toString());
                 Row row = partition.getRow(clustering);
                 if (isInsert(row)) {
                     if (rowIsDeleted(row)) {
