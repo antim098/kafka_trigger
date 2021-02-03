@@ -51,7 +51,7 @@ public class TriggerThread implements Callable<Object> {
         //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionValues.length; i++) {
             if (!partitionValues[i].trim().equals(""))
-                partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i].trim());
+                partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
         logger.info("Partition Key Json  " + partitionColsJson.toString());
         List<ObjectNode> rows = new ArrayList<>();
@@ -70,7 +70,7 @@ public class TriggerThread implements Callable<Object> {
                 //Flattening all the clustering Columns and adding to JSON row object
                 for (int i = 0; i < clusteringKeys.length; i++) {
                     if (!clusteringKeys[i].trim().equals(""))
-                        jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i].trim());
+                        jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
                 logger.info("cluster key json "+ jsonRow.toString());
                 Row row = partition.getRow(clustering);
