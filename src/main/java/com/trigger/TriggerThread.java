@@ -44,16 +44,14 @@ public class TriggerThread implements Callable<Object> {
         String tableName = partition.metadata().cfName;
         List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
         List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
-        String key = getKey(partition);
-        //key = 20201205:domino_entity_name:
-        logger.info("Partition Key ==" + key);
+        String key = getKey(partition);  //Sample key format -- 20201205:domino_entity_name:reason
+        //Using the overloaded split method because it preserves the length of the string when converting to []
         String[] partitionValues = key.split(":", -1);
         ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
         for (int i = 0; i < partitionValues.length; i++) {
             partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
         }
-        logger.info("Partition Key Json  " + partitionColsJson.toString());
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //JSONObject payload = new JSONObject();
@@ -64,14 +62,12 @@ public class TriggerThread implements Callable<Object> {
                 ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
                 String clusteringKey = clustering.toCQLString(partition.metadata());
-                logger.info("clusterkey " + clusteringKey);
+                //Sample clusteringKey format -- key1, key2
                 String[] clusteringKeys = clusteringKey.split(", ", -1);
-                logger.info(clusteringKeys.toString());
                 //Flattening all the clustering Columns and adding to JSON row object
                 for (int i = 0; i < clusteringKeys.length; i++) {
                     jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
-                logger.info("cluster key json " + jsonRow.toString());
                 Row row = partition.getRow(clustering);
                 if (isInsert(row)) {
                     if (rowIsDeleted(row)) {
@@ -90,11 +86,9 @@ public class TriggerThread implements Callable<Object> {
                             }
                         }
                         jsonRow.put("table", tableName);
-                        logger.info("Json Row " + jsonRow.toString());
                         jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
-                    logger.info("Full payload " + payload.toString());
                     rows.add(payload);
                 }
             }
