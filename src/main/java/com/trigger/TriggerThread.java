@@ -65,7 +65,7 @@ public class TriggerThread implements Callable<Object> {
                 //Sample clusteringKey format -- key1, key2
                 String[] clusteringKeys = clusteringKey.split(", ", -1);
                 //Flattening all the clustering Columns and adding to JSON row object
-                for (int i = 0; i < clusteringKeys.length; i++) {
+                for (int i = 0; i < clusteringColumns.size(); i++) {
                     jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
                 }
                 Row row = partition.getRow(clustering);
