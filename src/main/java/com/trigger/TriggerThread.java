@@ -136,9 +136,13 @@ public class TriggerThread implements Callable<Object> {
     }
 
     private String getStringValue(AbstractType cellValueType, ByteBuffer valueBuffer) {
-        Object value;
+        Object value = null;
         if (cellValueType.toString().contains("Timestamp")) {
-            value = TimestampType.instance.compose(valueBuffer).getTime();
+            try {
+                value = TimestampType.instance.compose(valueBuffer).getTime();
+            } catch (Exception ex) {
+                value = "";
+            }
         } else {
             value = cellValueType.compose(valueBuffer);
         }
