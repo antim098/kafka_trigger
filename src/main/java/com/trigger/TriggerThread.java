@@ -57,11 +57,16 @@ public class TriggerThread implements Callable<Object> {
 //        for (int i = 0; i < partitionValues.length; i++) {
 //            partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
 //        }
-        for (int i = 0; i < partitionColumns.size(); i++) {
-            String columnName = partitionColumns.get(i).name.toString();
-            String value = getStringValue(partitionColumns.get(i).type, CompositeType.extractComponent(partitionkey, i));
-            if (value != null) {
-                partitionColsJson.put(columnName, value);
+        if (partitionColumns.size() == 1) {
+            partitionColsJson.put(partitionColumns.get(0).name.toString(),
+                    getStringValue(partitionColumns.get(0).type, partitionkey));
+        } else {
+            for (int i = 0; i < partitionColumns.size(); i++) {
+                String columnName = partitionColumns.get(i).name.toString();
+                String value = getStringValue(partitionColumns.get(i).type, CompositeType.extractComponent(partitionkey, i));
+                if (value != null) {
+                    partitionColsJson.put(columnName, value);
+                }
             }
         }
         logger.info("partition col json " + partitionColsJson.toString());
