@@ -64,6 +64,7 @@ public class TriggerThread implements Callable<Object> {
                 partitionColsJson.put(columnName, value);
             }
         }
+        logger.info("partition col json " + partitionColsJson.toString());
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
         //JSONObject payload = new JSONObject();
@@ -108,6 +109,7 @@ public class TriggerThread implements Callable<Object> {
                         jsonRow.putAll(partitionColsJson);
                     }
                     payload.put("payload", jsonRow);
+                    logger.info("payload is " + payload.toString());
                     rows.add(payload);
                 }
             }
