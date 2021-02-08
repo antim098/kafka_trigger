@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.cassandra.config.ColumnDefinition;
 import org.apache.cassandra.db.Clustering;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.CompositeType;
 import org.apache.cassandra.db.marshal.TimestampType;
 import org.apache.cassandra.db.partitions.Partition;
 import org.apache.cassandra.db.rows.Cell;
@@ -46,14 +47,22 @@ public class TriggerThread implements Callable<Object> {
         }
         String tableName = partition.metadata().cfName;
         List<ColumnDefinition> partitionColumns = partition.metadata().partitionKeyColumns();
-        List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
+        //List<ColumnDefinition> clusteringColumns = partition.metadata().clusteringColumns();
+        ByteBuffer partitionkey = partition.partitionKey().getKey();
         String key = getKey(partition);  //Sample key format -- 20201205:domino_entity_name:reason
         //Using the overloaded split method because it preserves the length of the string when converting to []
-        String[] partitionValues = key.split(":", -1);
+        //String[] partitionValues = key.split(":", -1);
         ObjectNode partitionColsJson = MAPPER.createObjectNode();
         //Flattening all the partition Columns and creating JSON
-        for (int i = 0; i < partitionValues.length; i++) {
-            partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
+//        for (int i = 0; i < partitionValues.length; i++) {
+//            partitionColsJson.put(partitionColumns.get(i).toString(), partitionValues[i]);
+//        }
+        for (int i = 0; i < partitionColumns.size(); i++) {
+            String columnName = partitionColumns.get(i).name.toString();
+            String value = getStringValue(partitionColumns.get(i).type, CompositeType.extractComponent(partitionkey, i));
+            if (value != null) {
+                partitionColsJson.put(columnName, value);
+            }
         }
         List<ObjectNode> rows = new ArrayList<>();
         UnfilteredRowIterator it = partition.unfilteredIterator();
@@ -90,7 +99,7 @@ public class TriggerThread implements Callable<Object> {
                             //jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
                             //removed trim from line 84 as well
                             //String value = columnDef.type.getString(cell.value());
-                            String value = getStringValue(columnDef.cellValueType(),cell.value());
+                            String value = getStringValue(columnDef.cellValueType(), cell.value());
                             if (!value.equals("NULL") && !value.equals("")) {
                                 jsonRow.put(columnDef.name.toString(), value);
                             }
