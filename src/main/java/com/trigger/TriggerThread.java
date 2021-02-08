@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.cassandra.config.ColumnDefinition;
 import org.apache.cassandra.db.Clustering;
+import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.TimestampType;
 import org.apache.cassandra.db.partitions.Partition;
 import org.apache.cassandra.db.rows.Cell;
 import org.apache.cassandra.db.rows.Row;
@@ -14,6 +16,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -61,12 +64,17 @@ public class TriggerThread implements Callable<Object> {
                 ObjectNode payload = MAPPER.createObjectNode();
                 ObjectNode jsonRow = MAPPER.createObjectNode();
                 Clustering clustering = (Clustering) un.clustering();
-                String clusteringKey = clustering.toCQLString(partition.metadata());
+                //String clusteringKey = clustering.toCQLString(partition.metadata());
                 //Sample clusteringKey format -- key1, key2
-                String[] clusteringKeys = clusteringKey.split(", ", -1);
+                //String[] clusteringKeys = clusteringKey.split(", ", -1);
                 //Flattening all the clustering Columns and adding to JSON row object
-                for (int i = 0; i < clusteringColumns.size(); i++) {
-                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+//                for (int i = 0; i < clusteringColumns.size(); i++) {
+//                    jsonRow.put(clusteringColumns.get(i).toString(), clusteringKeys[i]);
+//                }
+                for (int i = 0; i < clustering.size(); i++) {
+                    String columnName = partition.metadata().clusteringColumns().get(i).name.toCQLString();
+                    jsonRow.put(columnName, getStringValue(partition.metadata().clusteringColumns().get(i).type,
+                            clustering.get(i)));
                 }
                 Row row = partition.getRow(clustering);
                 if (isInsert(row)) {
@@ -80,7 +88,9 @@ public class TriggerThread implements Callable<Object> {
                             ColumnDefinition columnDef = columns.next();
                             Cell cell = cells.next();
                             //jsonRow.put(columnDef.name.toString(), columnDef.type.getString(cell.value()));
-                            String value = columnDef.type.getString(cell.value()).trim();
+                            //removed trim from line 84 as well
+                            //String value = columnDef.type.getString(cell.value());
+                            String value = getStringValue(columnDef.cellValueType(),cell.value());
                             if (!value.equals("NULL") && !value.equals("")) {
                                 jsonRow.put(columnDef.name.toString(), value);
                             }
@@ -107,6 +117,16 @@ public class TriggerThread implements Callable<Object> {
             logger.info(ex.getMessage(), ex);
         }
         return null;
+    }
+
+    private String getStringValue(AbstractType cellValueType, ByteBuffer valueBuffer) {
+        Object value;
+        if (cellValueType.toString().contains("Timestamp")) {
+            value = TimestampType.instance.compose(valueBuffer).getTime();
+        } else {
+            value = cellValueType.compose(valueBuffer);
+        }
+        return String.valueOf(value);
     }
 
     /**
