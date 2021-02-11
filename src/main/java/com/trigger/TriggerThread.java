@@ -133,6 +133,14 @@ public class TriggerThread implements Callable<Object> {
         return null;
     }
 
+    /**
+     * Converts the bytebuffer value into string using the value datatype.
+     * Special handling added for TimestampType columns.
+     * Timestamp columns are converted to long.
+     * @param cellValueType The data type of the cell value
+     * @param valueBuffer  The value of cell as bytebutter
+     * @return String converted cell value.
+     */
     private String getStringValue(AbstractType cellValueType, ByteBuffer valueBuffer) {
         Object value = null;
         if (cellValueType.toString().contains("Timestamp")) {
